@@ -1,0 +1,33 @@
+opam-version: "2.0"
+synopsis: """Connected hypertext for interactive web pages"""
+maintainer: ["Daniel Bünzli <daniel.buenzl i@erratique.ch>"]
+authors: ["The hc programmers"]
+homepage: "https://erratique.ch/software/hc"
+doc: "https://erratique.ch/software/hc/doc"
+dev-repo: "git+https://erratique.ch/repos/hc.git"
+bug-reports: "https://github.com/dbuenzli/hc/issues"
+license: ["ISC"]
+tags: ["front-end" "ui" "html" "org:erratique"]
+depends: ["ocaml" {>= "4.08.0"}
+          "ocamlfind" {build}
+          "ocamlbuild" {build}
+          "topkg" {build & >= "1.0.3"}
+          "brr"
+          "webs" {with-test}
+          "js_of_ocaml-compiler" {>= "3.7.1"}]
+build: [["ocaml" "pkg/pkg.ml" "build" "--dev-pkg" "%{dev}%"
+           "--with-webs" "%{webs:installed}%"]]
+description: """
+Hc declares interactive web pages by using HTML data attributes to
+request and seamlessly integrate HTML fragments from the server.
+
+Using hypertext as the interaction substrate keeps logic on the server
+and, in the simplest cases, reduces front-end client code to a generic
+JavaScript driver and custom CSS animations.
+
+Hc is distributed under the ISC license. Compilation of the JavaScript
+driver depends on [brr][brr].
+
+Homepage: https://erratique.ch/software/hc
+
+[brr]: https://erratique.ch/software/brr"""

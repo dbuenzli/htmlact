@@ -1,0 +1,71 @@
+{0 Hc {%html: <span class="version">%%VERSION%%</span>%}}
+
+Hc declares interactive web pages by using HTML {{!page-manual.attref}data
+attributes} to request and seamlessly integrate HTML fragments from
+the server.
+
+Using hypertext as the interaction substrate keeps logic on the server
+and, in the simplest cases, reduces front-end client code to an
+invocation of the {!Hc_page.init} function and custom CSS animations.
+
+[hc] was inspired by {{:https://htmx.org/}htmx}.
+
+{1:quick_start Quick start}
+
+In your HTML,
+
+{v
+<script type="text/javascript" defer src="hc.js"></script>
+<button data-request="POST /clicked" data-effect="inplace">
+  Replace me
+</button>
+v}
+
+Instructs a click on the button to perform a POST request to
+[/clicked] and replace the button with the HTML response.
+
+{1:manuals Manuals}
+
+{ul
+{- The {{!page-manual}manual} explains it all.}}
+
+{1:api API}
+
+{!modules:
+Hc
+Hc_page
+}
+
+
+{1:todo TODO}
+
+{ul
+{- Provide and trigger events for [Hc] behaviour itself, this
+   allows to chain [Hc] connections in interesting ways and
+   helps coordinating with other front end code}
+{- Because of resource costs we likely want something like
+   multi-target response updates for SSE and websockets. Also
+   useful for deletion examples (or should we enrich effect ?)}
+{- Provide support for full page target. Support a [data-preserve]
+   attribute which patches by id in the replacement}
+{- Provide support history via [data-push-history], pushes the request
+   url, snapshots body element for state restoration.}
+{- Provide support for load and revealed events.}
+{- The event source mecanism remains expressively limited e.g.
+   for click event from that element, key from that other one,
+   but maybe we don't care. It's possible to work around. Parsewise
+   it's difficult to have a <sel> argument in an attribute
+   beyond itself (e.g. [from:<sel>]).}
+{- Define the semantics in case of HTTP errors}
+{- Maybe for events keep event simpler, only trigger on
+   request element but devise a separate DSL to declare custom
+   events and fan-in from other events. Or even, let that
+   to separate JavaScript fiddling.}
+{- Consider [data-response-sel] to apply on the response.}
+{- CSS [hc-request], consider timing according to human
+   factors, or can we delay in CSS itself ?}
+{- Note sure the animation stuff is exactly right. Usage will tell.}
+{- Wouldn't it be better to unconditionally
+   feedback [hc-intro] [hc-outro] on the injected roots ?
+   Note that's what we do now in case of [`Replace]. Need
+   to clarify}}

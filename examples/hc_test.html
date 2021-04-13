@@ -1,0 +1,250 @@
+
+<!-- click-to-edit -->
+<div>
+  <label>Name</label>: <span>OCaml</span>
+  <label>Link</label>: <a href="https://ocaml.org">https://ocaml.org</a>
+  <button data-request="/bookmark/1/edit" data-target=":up"
+          data-effect="replace">Edit</button>
+</div>
+
+<form data-request="PUT /contact/1" data-effect="replace">
+  <label>Name</label>: <input type="text" name="first" value="OCaml">
+  <label>Link</label>: <input type="url" name="link" value="https://ocaml.org">
+  <button data-request="/bookmark/1" data-target="form:up"
+          data-effect="replace">Cancel</button>
+</form>
+
+
+<!-- bulk update
+
+     sends ids={2,3} -->
+<form>
+  <table>
+    <thead>
+      <tr>
+        <th></th><th>Name</th><th>Link</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="">
+        <td><input type='checkbox' name='ids' value='0'></td>
+        <td>OCaml</td>
+        <td><a href="https://ocaml.org">ocaml.org></td>
+        <td>Active</td>
+      </tr>
+    </tbody>
+  </table>
+  <button data-request="PUT /bookmarks/?action=activate"
+          data-query=":up tbody"
+          data-target=":up tbody">Activate</button>
+  <button data-request="PUT /bookmarks/?action=deactivate"
+          data-query=":up tbody"
+          data-target=":up tbody">Deactivate</button>
+</div>
+</form>
+
+<!-- click to load -->
+
+<table>
+  <thead></thead>
+  <tbody>
+    <tr>
+      <td colspan="3">
+        <button data-request="/bookmarks/?page=2"
+                data-target="tr:up">More…</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- delete row
+
+     FIXME the example replaces the row with nothing.
+     We would also like to trigger a message
+     and/or undo button.
+     Add data-remove ? It's likely better to define
+     multi-target updates responses
+
+     hc-has-targets: true
+
+     <div data-resp-target='tr
+-->
+
+<tr>
+  <td>Bla</bli>
+  <td><button data-request="DELETE /bookmark/1"
+              data-target="tr:up">Delete</button></td>
+</tr>
+
+
+<div>
+  <div class="status"></div>
+  <tr>
+    <td>Bla</bli>
+    <td><button data-request="DELETE /bookmark/1"
+                data-target="div:up .status">Delete</button>
+                data-remove="tr:up"
+    </td>
+  </tr>
+</div>
+
+
+
+<!-- lazy loading -->
+
+.hc-outro { opacity: 0; }
+img { transition: opacity 300ms ease-in }
+
+
+<div data-request="/graph" data-event="load">
+  <img src="/img/spin.svg" />
+</div>
+
+
+<!-- Server side validation -->
+
+<h1>Register</h1>
+<form data-request="POST /users">
+  <div>
+    <label>Email address</label>
+    <input name="email"
+           data-request="POST /users?a=validate"
+           data-target=":up">
+    <img class="spinner" src="/img/spinner">
+  </div>
+</form>
+
+In case of error
+
+<div class="error">
+  <label>Email address</label>
+  <input name="email" data-request="POST /users?a=validate"
+         data-target=":up" value="transmitted value">
+  <img class="spinner" src="/img/spinner">
+  <div>Please enter a valid email address</div>
+</div>
+
+.spinner { opacity: 0 }
+.hc-request .spinner { opacity: 1 }
+
+
+<!-- Infinite scroll -->
+
+<tr data-request="/bookmarks/?page=2"
+    data-event="revealed"
+    data-effect="afterend">
+  data
+</tr>
+
+
+<!-- Active search -->
+
+<h2>
+  Search bookmarks
+  <span class=".spinner">
+</h2>
+<input type="text"
+       name="q"
+       placeholder="Type to search bookmarks…"
+       data-target="/bookmarks/?a=search"
+       data-event="throttle:500ms"
+       data-target=":up tbody"
+       data-feedback=":up .spinner">
+<table>
+  <tbody>
+  </tbody>
+</table>
+
+
+<!-- Progress bar
+     Use a progress element maybe ?
+-->
+
+.progess div { transition: width .6s ease; }
+
+<div>
+  <h3>Start job</h3>
+  <button data-request="POST /start"
+          data-target=":up">Start job</button>
+</div>
+
+<div data-request="GET /job/status"
+     data-event="load delay:600ms"
+     data-effect="replace">
+  <h3>Running</h3>
+  <div class="progress">
+    <div style="width:0%"/> <--! changes every 600ms --!>
+  </div>
+</div>
+
+<div>
+  <h3>Complete</h3>
+  <div class="progress"><div style="width:100%"/></div>
+  <button data-request="POST /start"
+          data-target=":up">Restart job</button>
+</div>
+
+
+<!-- Cascading selects -->
+
+
+<div>
+  <label>Choose a category</label>
+  <select name="category"
+          data-request="GET /article/"
+          data-target=":up [name=article]">
+    <option value="food">Food</option>
+    <option value="drinks">Drinks</option>
+  </select>
+  <label>Article</label>
+  <select name="article"></select>
+</select>
+
+<option value="coffe">Coffee</option>
+<option value="tee">Tee</option>
+
+<!-- Animation techniques -->
+
+.fade-out { opacity: 0; transition: opacity 1s ease-out; }
+<button class="fade-out"
+        data-request="POST /fade-out"
+        data-effect="replace intro:1s">Fade out</button>
+
+.fade-in.hc-outro { opacity: 0; }
+.fade-in { opacity: 1; transition: opacity 1s ease-out }
+<button class="fade-in"
+        data-request="POST /fade-in"
+        data-effect="replace outro:1s">Fade in</button>
+
+
+form.hc-request { opacity: 0.5; transition: opacity 300ms linear; }
+<form data-request="POST /message">
+  <input name="message" type="text">
+  <input type="submit">Submit</button>
+</form>
+
+<!-- File upload Progress !? -->
+
+<form data-request="POST /upload">
+  <input type="file" name="file">
+  <input type="submit">
+</form>
+
+
+<!-- Modals !-->
+
+<button data-request="/modal"
+        data-target="body:up"
+        data-effect="beforeend">Open a modal</modal>
+
+
+<!-- Tabs !-->
+
+<div>
+  <nav class="tab-list">
+    <button data-request="/tab1" data-target=":up .tab">Tab1</button>
+    <button data-request="/tab2" data-target=":up .tab">Tab2</button>
+  </div>
+  <div class="tab">
+</div>

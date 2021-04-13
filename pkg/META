@@ -1,0 +1,19 @@
+description = "Connected hypertext for interactive webpages"
+version = "%%VERSION_NUM%%"
+requires = ""
+archive(byte) = "hc.cma"
+archive(native) = "hc.cmxa"
+plugin(byte) = "hc.cma"
+plugin(native) = "hc.cmxs"
+
+package "page" (
+  description = "Web page driver"
+  version = "%%VERSION_NUM%%"
+  directory = "page"
+  requires = "brr"
+  archive(byte) = "hc_page.cma"
+  archive(native) = "hc_page.cmxa"
+  plugin(byte) = "hc_page.cma"
+  plugin(native) = "hc_page.cmxs"
+  exists_if = "hc_page.cma"
+)

@@ -1,0 +1,246 @@
+{0 Manual}
+
+{1:connection Connection cycle}
+
+We first start by defining the kind of elements that take part in a
+connection cycle.
+
+All these elements are always defined via attributes of the request
+element. They can all point to the same element. In particular if they
+are not specified they mostly default to the request element.
+
+    {ul
+    {- The {e request} element. This is the element that has the
+       {{!data_request}[data-request]} attribute. It is the
+       element that specifies the connection to the server.}
+    {- The {e event source} elements, specified by
+       the {{!data_event_src}[data-event-src]} attribute. They
+       are the elements whose events specified in the {{!data_event_src}
+       [data-event]} attribute trigger the request.}
+    {- The {e query} elements, specified by the
+       {{!data_query}[data-query]} attribute. These are the element
+       that are looked up to devise the request's query data.}
+    {- The {e target} element. This is the element specified by the
+       {{!data_target}[data-target]} attribute. It specifies the
+       relative location of the request response effect.}
+    {- The {e feedback} element(s), specified by
+       {{!data_feedback}[data-feedback]}. These are the elements on
+       which the connection cycle is feedback using classes.}}
+
+Every request element on the page cycle through the following
+steps.
+
+{ol
+{- Wait for the element's {{!data_event}request event} to happen.}
+{- Determine from the element's attributes, the {{!data_request}kind of
+   request}, its {{!data_query}query} data, the
+       {{!data_target}target} element and
+       the {{!data_effect}effect} and the
+       {{!data_feedback}feedback} {e element(s)}.}
+{- Perform the request with the {{:data_query}query}.}
+{- Wait for the response.}
+{- Process any {{!responses}special header} in the response. This
+   may stop the cycle here (e.g. on {{!header_reload}reload} or
+   {{!header_redirect}redirect}).}
+{- Perform the {{:data_effect}effect} on the {{:data_target}target}.}
+{- If the request is:
+   {ul
+   {- a websocket, loop to 1 with the same socket.}
+   {- SSE connection, loop to 4.}
+   {- Otherwise loop to 1 (if the element still exists
+      after the effect)}}}}
+
+{1:css_class_feedback CSS classes feedback}
+
+The following classes are applied on the {{!data_feedback}feedback
+element} during the {{!connection}connection cycle}. Note that
+[hc-request] and [ht-error] are also unconditionally feedback on the
+{{!data_request}request element}.
+
+{ul
+{- [hc-request], set while the request is ongoing.}
+{- [hc-intro], set when the response has been received
+       and while waiting for the effect intro time to expire.}
+{- [hc-outro], set when the effect has been performed
+       and while waiting for the effect outro time to expire.}
+{- [hc-error], set whenever an error occured with the request.}}
+
+{1:attref Attribute reference}
+
+The only attribute required for an HTML element to be connected to
+your server is {{!data_request}data-request} which specifies the
+request to initiate the connection.
+
+{2:data_request [data-request="[<m>] <url>"]}
+
+This attribute drives it all. If unspecified the element has no
+connection to the server and all other [data-*] attributes are
+ignored.
+
+[<url>] is the URL to request, use the [ws://] or [wss://] scheme for
+a websocket connection. [<m>] is the HTTP request method or [SSE]
+to request a server sent events connection; defaults to [GET]
+if unspecified.
+
+{2:data_query [data-query="<sel>"]}
+
+The value of [<sel>] determines the elements that are used to
+specify the query of the request.
+If unspecified this is the {{!data_request}request element} itself.
+
+The final query of the request is determined by taking the query part of
+the {{!data_request}requested URL} and for each of the elements
+selected by [<sel>] appending:
+
+{ul
+{- If the element is a [form], the form data as gathered by
+   {{:https://developer.mozilla.org/en-US/docs/Web/API/FormData}
+   [FormData].}}
+{- If the element has a {{:https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefvalue}value} property [<value>]
+   and the element has a [name] property value [<name>], a
+   [<name>] to [<value>] binding. If the element has no [name]
+   use ["value"] for the [<name>].}
+{- Otherwise, nothing.}}
+
+The query is transmitted in the URL on [GET] or [HEAD] requests and
+otherwise in the request body encoded with
+[application/x-www-form-urlencoded] unless there is a file input in
+which case [multipart/form-data] is used.
+
+{2:data_event [data-event="[<ev>] <mod>*"]}
+
+[<ev>] is the name of the JavaScript event of the
+{{!data_event_src}event source} that triggers requests. Multiple
+events can be specified by separating them with a comma.
+
+If [<ev>] is unspecified this is:
+{ul
+{- [submit] for [form] elements.}
+{- [change] for [input], [textarea] and [select].}
+{- [click] otherwise.}}
+
+[<mod>] are modifiers for the event:
+{ul
+{- [once], the event is triggered only once}
+{- [debounce:<dur>], a debouncing time, the request only
+   occurs after duration [<time>] of the {e last} event occurence.}
+{- [throttle:<dur>], a throttling time, the request occurs
+   immediatly but won't occur again before duration [<dur>].}
+{- [filter:<jsfun>], name of a filtering function. The function
+   is given the requesting element and the event, if it returns
+   [false] the event did not occur.}}
+
+{2:data_event_src [data-event-src="<sel>"]}
+
+The DOM element(s), as {{!selector}selected} by [<sel>], whose
+{{!data_event}events} are being listened for to trigger a request.
+If unspecified this is the {{!data_request}request element} itself.
+
+{2:data_target [data-target="<sel>"]}
+
+The target DOM element, as selected by the first element of [<sel>],
+on which the {{!data_request}request} response performs its
+{{!data_effect}effect}. If unspecified this is the
+{{!data_request}request element} itself.
+
+{2:data_effect [data-effect="<eff> [intro:<dur>] [outro:<dur>]"]}
+
+The value [<eff>] determines the way the HTML response is used on
+the {{!data_target}target}. This can be:
+
+{ul
+{- [inner] to replaces the children of the target (default).}
+{- [inplace] to replaces the target itself.}
+{- [beforebegin] to insert before the target.}
+{- [afterbegin] to insert before the first child of the target.}
+{- [beforeend] to insert after the last child of the target.}
+{- [afterend] to insert after the target.}
+{- [none] to discard the HTML response.}
+{- [event <ev>] to discard the HTML response but trigger an event named
+   [<ev>] on the target}}
+
+The value [<time>] of [intro:] specifies a duration in [s] or [ms] to
+wait before applying the effect. During that time the [hc-intro] class
+is specified on the {{!data_feedback}feedback element} and the
+{{!data_target}target element}.
+
+The value [<time>] of [outro:] specifies an amount of time in [s] or
+[ms] to wait after applying the effect. During that time the
+[hc-outro] class is specified on the {{!data_feedback}feedback
+element} and the {{!data_target}target element}.
+
+If unspecified this is [inner intro:0s outro:0s].
+
+{2:data_feedback [data-feedback="<sel>"]}
+
+The DOM element(s), as selected by [<sel>], on which the connection
+cycle is feedback using classes. If unspecified this is the
+{{!data_target}target element}. See {!css_classes}.
+
+{1:selector Selector syntax}
+
+    Attributes of [hc] use
+    {{:https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors}
+    CSS selectors} with
+    {{:https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector}
+    [querySelector]} to gather query data and target response
+    effects. However CSS selectors have no syntax for addressing
+    ancestors. We slightly extend the syntax to allow it because in
+    many cases this eschews the need to use element identifiers which
+    improves modularity – use with care, it can also improve
+    {e obscurity}.
+
+    We allow a CSS selector to be prefixed by a sequence of
+    ancestor specifications which select the root on which the CSS
+    selector is then applied. This provides full tree addressing:
+    first move up to find an ancestor and then down by applying
+    the CSS selector to it.
+
+    An ancestor specification is made of an optional element, optional
+    classes and the made up [:up] pseudo-class. The semantic is to
+    move up from the element by following the up selectors from
+    left-to-right and then apply the CSS selector on ancestor that
+    was found.
+
+    Here examples:
+{v
+  :up                # parent
+  :up :up            # parent's parent
+  :up :up :scope > * # parent's parent's children
+  .beet.root:up      # ancestor with classes beet and root
+  .beet:up .root:up  # move to beet ancestor, then to root ancestor
+  ul.beet.root:up    # ul ancestor with classes beet and root
+  div:up .beet       # div ancestor, beet classified descendents
+v}
+    The full syntax as an
+    {{:https://tools.ietf.org/html/rfc5234}RFC 5234 ABNF} grammar is
+    described as follows:
+{v
+         sel = *(up SP) css-selector
+          up = [[el] *class] ":up"
+          el = 1*(ALPHA)
+       class = "." 1*(ALPHA)
+css-selector = …   # See the CSS specification
+v}
+
+{1:responses Response HTTP headers}
+
+The server should respond with an HTML fragment to be inserted with
+respect to the {{!data_target}request target}.
+
+Additionally it can use the headers described next to control the
+client.
+
+{2:header_redirect [hc-redirect: <url>]}
+
+Redirects the page to [<url>]. The body of the response is ignored by [Hc].
+
+{2:header_reload [hc-reload: true]}
+
+Reloads the page. The body of the response is igored by [Hc]. *)
+
+{1:request Request HTTP headers}
+
+{2:header_hc [hc: true]}
+
+Indicates the request is made by [Hc].
