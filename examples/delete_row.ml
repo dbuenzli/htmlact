@@ -22,16 +22,15 @@ let style = {css|
 tr td:nth-child(1) { min-width:10ex; }
 tr td:nth-child(2) { min-width:20ex; }
 tr.broken td:nth-child(1) { color: rgba(var(--redish)); }
-tr { transition: all 1000ms; }
-tr.hc-intro { opacity: 0; transition: opacity 500ms ease-out; }
+tr.hc-out { opacity: 0; transition: all var(--dur-medium) ease-out; }
 |css}
 
 let delete_bookmark urlf b =
   let url = Example.uf urlf "bookmark/%d" b.Bookmark.id in
-  let request = Hc.request ~meth:`DELETE url in
-  let target = Hc.target "tr:up" in
-  let effect = Hc.effect ~intro_ms:500 `Inplace in
-  Example.button ~at:At.[request; target; effect] "Delete"
+  let r = Hc.request ~meth:`DELETE url in
+  let t = Hc.target "tr:up" in
+  let e = Hc.effect ~delay_ms:Hc.Dur.medium `Inplace in
+  Example.button ~at:[r; t; e] "Delete"
 
 let deletable_bookmark urlf b =
   let status = if b.Bookmark.broken then "broken" else "alive" in
@@ -50,12 +49,10 @@ let table_view urlf bs =
     Ht.tbody (List.map (deletable_bookmark urlf) bs)]
 
 let actions urlf =
-  let request = Hc.request ~meth:`POST (Example.uf urlf "?action=restore") in
-  let target = Hc.target ":up :up table" in
-  let effect = Hc.effect ~outro_ms:500 `Inplace in
-  let restore =
-    Example.button ~at:[request; target; effect] "Restore deleted"
-  in
+  let r = Hc.request ~meth:`POST (Example.uf urlf "?action=restore") in
+  let t = Hc.target ":up :up table" in
+  let e = Hc.effect `Inplace in
+  let restore = Example.button ~at:[r; t; e] "Restore deleted" in
   Ht.div [restore]
 
 let index r =

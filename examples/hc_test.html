@@ -1,61 +1,4 @@
 
-<!-- click-to-edit -->
-<div>
-  <label>Name</label>: <span>OCaml</span>
-  <label>Link</label>: <a href="https://ocaml.org">https://ocaml.org</a>
-  <button data-request="/bookmark/1/edit" data-target=":up"
-          data-effect="replace">Edit</button>
-</div>
-
-<form data-request="PUT /contact/1" data-effect="replace">
-  <label>Name</label>: <input type="text" name="first" value="OCaml">
-  <label>Link</label>: <input type="url" name="link" value="https://ocaml.org">
-  <button data-request="/bookmark/1" data-target="form:up"
-          data-effect="replace">Cancel</button>
-</form>
-
-
-<!-- bulk update
-
-     sends ids={2,3} -->
-<form>
-  <table>
-    <thead>
-      <tr>
-        <th></th><th>Name</th><th>Link</th><th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr class="">
-        <td><input type='checkbox' name='ids' value='0'></td>
-        <td>OCaml</td>
-        <td><a href="https://ocaml.org">ocaml.org></td>
-        <td>Active</td>
-      </tr>
-    </tbody>
-  </table>
-  <button data-request="PUT /bookmarks/?action=activate"
-          data-query=":up tbody"
-          data-target=":up tbody">Activate</button>
-  <button data-request="PUT /bookmarks/?action=deactivate"
-          data-query=":up tbody"
-          data-target=":up tbody">Deactivate</button>
-</div>
-</form>
-
-<!-- click to load -->
-
-<table>
-  <thead></thead>
-  <tbody>
-    <tr>
-      <td colspan="3">
-        <button data-request="/bookmarks/?page=2"
-                data-target="tr:up">More…</button>
-      </td>
-    </tr>
-  </tbody>
-</table>
 
 
 <!-- delete row
@@ -93,7 +36,7 @@
 
 <!-- lazy loading -->
 
-.hc-outro { opacity: 0; }
+.hc-in { opacity: 0; }
 img { transition: opacity 300ms ease-in }
 
 
@@ -211,7 +154,7 @@ In case of error
         data-request="POST /fade-out"
         data-effect="replace intro:1s">Fade out</button>
 
-.fade-in.hc-outro { opacity: 0; }
+.fade-in.hc-in { opacity: 0; }
 .fade-in { opacity: 1; transition: opacity 1s ease-out }
 <button class="fade-in"
         data-request="POST /fade-in"

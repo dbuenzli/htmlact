@@ -41,12 +41,9 @@ let effect_kind_to_string = function
 | `Beforeend -> "beforeend" | `Afterend -> "afterend"
 | `None -> "none" | `Event ev -> "event " ^ ev
 
-let effect ?intro_ms ?outro_ms k =
-  let effect_xtro_ms k = function None -> "" | Some t -> strf " %s:%dms" k t in
-  let k = effect_kind_to_string k in
-  let intro = effect_xtro_ms "intro" intro_ms in
-  let outro = effect_xtro_ms "outro" outro_ms in
-  At.v "data-effect" (String.concat "" [k; intro; outro])
+let effect ?delay_ms:d k =
+  let delay = match d with None -> "" | Some d -> strf " delay:%dms" d in
+  At.v "data-effect" (effect_kind_to_string k ^ delay)
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

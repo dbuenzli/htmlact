@@ -24,8 +24,8 @@ tr td:nth-child(2) { width:20%; }
 tr td:nth-child(3) { width:75%; }
 tr.broken td:nth-child(2) { color: rgb(var(--redish)); }
 tr { transition: all 1000ms; }
-form.hc-outro tr.updated.broken { background: rgba(var(--redish), 0.1); }
-form.hc-outro tr.updated.alive { background: rgba(var(--greenish), 0.1); }
+form.hc-in tr.updated.broken { background: rgba(var(--redish), 0.1); }
+form.hc-in tr.updated.alive { background: rgba(var(--greenish), 0.1); }
 |css}
 
 let bookmark_selector b =
@@ -50,9 +50,8 @@ let table_view ?updated bs =
 
 let actions urlf =
   let act a = Hc.request ~meth:`PUT (Example.uf urlf "?action=%s" a) in
-  let target = ":up :up form" in
-  let t = Hc.target target and q = Hc.query target in
-  let e = Hc.effect ~outro_ms:500 `Inplace in
+  let t = ":up :up form" in
+  let t = Hc.target t and q = Hc.query t and e =  Hc.effect `Inplace in
   let alive = Example.button ~at:[act "set-alive"; t; e; q] "Set alive" in
   let broken = Example.button ~at:[act "set-broken"; t; e; q] "Set broken" in
   Ht.div [alive; broken]

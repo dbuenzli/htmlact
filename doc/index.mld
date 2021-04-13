@@ -1,8 +1,8 @@
 {0 Hc {%html: <span class="version">%%VERSION%%</span>%}}
 
-Hc declares interactive web pages by using HTML {{!page-manual.attref}data
-attributes} to request and seamlessly integrate HTML fragments from
-the server.
+Hc declares dynamic web pages by using HTML data attributes to
+seamlessly update the page with HTML fragments requested from the
+server.
 
 Using hypertext as the interaction substrate keeps logic on the server
 and, in the simplest cases, reduces front-end client code to an
@@ -15,7 +15,7 @@ invocation of the {!Hc_page.init} function and custom CSS animations.
 In your HTML,
 
 {v
-<script type="text/javascript" defer src="hc.js"></script>
+<script type="text/javascript" defer src="hc-page.js"></script>
 <button data-request="POST /clicked" data-effect="inplace">
   Replace me
 </button>
@@ -35,7 +35,6 @@ Instructs a click on the button to perform a POST request to
 Hc
 Hc_page
 }
-
 
 {1:todo TODO}
 
@@ -62,10 +61,14 @@ Hc_page
    events and fan-in from other events. Or even, let that
    to separate JavaScript fiddling.}
 {- Consider [data-response-sel] to apply on the response.}
-{- CSS [hc-request], consider timing according to human
-   factors, or can we delay in CSS itself ?}
-{- Note sure the animation stuff is exactly right. Usage will tell.}
-{- Wouldn't it be better to unconditionally
-   feedback [hc-intro] [hc-outro] on the injected roots ?
-   Note that's what we do now in case of [`Replace]. Need
-   to clarify}}
+{- Try to get rid of [delay] in [data-effect]. It would be nice is to
+   avoid the CSS/code duration dupe.
+   Fiddling with transitionend animationend event seems brittle.
+    It's
+   a bit annoying because animations may be on descendents of
+   [hc-out] and [hc-out-parent]. One approach could be to apply
+   the classes and then find the max of [animation-duration],
+   [transition-duration] via getComputedStyle. The client then
+   needs to specify [animation-duration] even if it's not the element
+   animating.
+   }}

@@ -37,7 +37,8 @@ steps.
        {{!data_target}target} element and
        the {{!data_effect}effect} and the
        {{!data_feedback}feedback} {e element(s)}.}
-{- Perform the request with the {{:data_query}query}.}
+{- Perform the request with the {{:data_query}query}. Redirections
+   are followed.}
 {- Wait for the response.}
 {- Process any {{!responses}special header} in the response. This
    may stop the cycle here (e.g. on {{!header_reload}reload} or
@@ -50,20 +51,56 @@ steps.
    {- Otherwise loop to 1 (if the element still exists
       after the effect)}}}}
 
-{1:css_class_feedback CSS classes feedback}
+{1:css_class_feedback CSS class feedback}
 
-The following classes are applied on the {{!data_feedback}feedback
-element} during the {{!connection}connection cycle}. Note that
-[hc-request] and [ht-error] are also unconditionally feedback on the
-{{!data_request}request element}.
+The following classes can be used to track the connection cycle.
 
-{ul
-{- [hc-request], set while the request is ongoing.}
-{- [hc-intro], set when the response has been received
-       and while waiting for the effect intro time to expire.}
-{- [hc-outro], set when the effect has been performed
-       and while waiting for the effect outro time to expire.}
-{- [hc-error], set whenever an error occured with the request.}}
+{2:class_hc_request [hc-request]}
+
+This class is applied on the {{!data_request}request element} and
+the {{!data_feedback}feedback element} whenever a request is made
+on the server.
+
+This class can typically be used to trigger a CSS animation if
+the request is taking too long. For example assuming you
+have a [.spinner] in your request element, the following
+shows the spinner if the request is taking longer than 500ms.
+
+{v
+.spinner { visibility: hidden; }
+.hc-request > .spinner { animation: spin 1s linear 500ms infinite; }
+
+@keyframes spin
+{ from { visibility: visible; } to { transform: rotate(360deg); }}
+v}
+
+{2:class_hc_error [hc-error]}
+
+This class is applied on the {{!data_request}request element} and
+the {{!data_feedback}feedback element} whenever a request failed.
+This includes if the request returns a 4XX or 5XX result.
+
+{2:class_hc_in [hc-in] and [hc-in-parent]}
+
+These classes are applied for a small amount of time when the request
+effect is performed. [hc-in] is applied on the root of HTML trees that
+are inserted in the DOM by the effect, and [hc-in-parent] is applied
+on the parent in which the trees are inserted.
+
+These classes are typically used to trigger CSS animations. For
+example to fade in an element in 250ms on insertion use:
+
+{v
+.my-element.hc-in { opacity: 0 }
+.my-element { opacity: 1; transition: opacity 250ms; }
+v}
+
+{2:class_hc_out [hc-out] and [hc-out-parent]}
+
+These classes are applied for the delay specified by
+the {{!data_effect}data-effect} before removing elements from the
+DOM. [hc-out] is applied on elements that are being removed and
+[hc-out-parent] is applied on the parent of these elements.
 
 {1:attref Attribute reference}
 
@@ -143,7 +180,7 @@ on which the {{!data_request}request} response performs its
 {{!data_effect}effect}. If unspecified this is the
 {{!data_request}request element} itself.
 
-{2:data_effect [data-effect="<eff> [intro:<dur>] [outro:<dur>]"]}
+{2:data_effect [data-effect="<eff> [delay:<dur>]"]}
 
 The value [<eff>] determines the way the HTML response is used on
 the {{!data_target}target}. This can be:
@@ -159,17 +196,11 @@ the {{!data_target}target}. This can be:
 {- [event <ev>] to discard the HTML response but trigger an event named
    [<ev>] on the target}}
 
-The value [<time>] of [intro:] specifies a duration in [s] or [ms] to
-wait before applying the effect. During that time the [hc-intro] class
-is specified on the {{!data_feedback}feedback element} and the
-{{!data_target}target element}.
+The value [<dur>] of [delay:] specifies a duration in [s] or [ms] to
+wait before applying the effect. During that time the [hc-out]
+and [hc-out-parent] are specified on the elements that will be removed.
 
-The value [<time>] of [outro:] specifies an amount of time in [s] or
-[ms] to wait after applying the effect. During that time the
-[hc-outro] class is specified on the {{!data_feedback}feedback
-element} and the {{!data_target}target element}.
-
-If unspecified this is [inner intro:0s outro:0s].
+If unspecified this is [inner delay:0ms].
 
 {2:data_feedback [data-feedback="<sel>"]}
 

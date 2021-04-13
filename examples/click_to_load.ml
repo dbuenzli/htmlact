@@ -33,7 +33,7 @@ tr td:nth-child(1) { width:15%; }
 tr td:nth-child(2) { width:85%; }
 tr.broken td:nth-child(1) { color: rgb(var(--redish)); }
 tr, tr td { transition: all var(--dur-short); }
-tr.hc-outro { transform: translateY(calc(-1 * var(--size-half-line))); }
+tr.hc-in { transform: translateY(calc(-1 * var(--size-half-line))); }
 |css}
 
 let bookmark_row b =
@@ -43,10 +43,10 @@ let bookmark_row b =
       Ht.td [Ht.a ~at:At.[href b.Bookmark.link] [Ht.txt b.Bookmark.name]]]
 
 let load_next urlf n =
-  let request = Hc.request ~meth:`GET (Example.uf urlf "?page=%d" n) in
-  let target = Hc.target "tr:up" in
-  let effect = Hc.effect ~outro_ms:1 (* FIXME *) `Inplace in
-  let more = Example.button ~at:[request; target; effect] "More…" in
+  let r = Hc.request ~meth:`GET (Example.uf urlf "?page=%d" n) in
+  let t = Hc.target "tr:up" in
+  let e = Hc.effect `Inplace in
+  let more = Example.button ~at:[r; t; e] "More…" in
   Ht.tr [Ht.td ~at:At.[int "colspan" 3] [more]]
 
 let bookmark_page_rows ?per_page urlf n =

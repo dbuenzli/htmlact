@@ -59,8 +59,8 @@ end
 
 (** {1:atts Attributes} *)
 
-val request : ?meth:Http.meth -> string -> At.t
-val request_path : ?meth:Http.meth -> Http.path -> At.t
+val request : ?meth:[< Http.meth | `Sse] -> string -> At.t
+val request_path : ?meth:[< Http.meth | `Sse] -> Http.path -> At.t
 val target : string -> At.t
 val query : string -> At.t
 
@@ -68,7 +68,7 @@ type effect_kind =
 [ `Inner | `Inplace | `Beforebegin | `Afterbegin | `Beforeend
 | `Afterend | `None | `Event of string ]
 
-val effect : ?intro_ms:int -> ?outro_ms:int -> effect_kind -> At.t
+val effect : ?delay_ms:int -> effect_kind -> At.t
 
 
 (*---------------------------------------------------------------------------

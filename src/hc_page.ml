@@ -45,9 +45,11 @@ end
 
 module Class = struct
   let request = Jstr.v "hc-request"
-  let intro = Jstr.v "hc-intro"
-  let outro = Jstr.v "hc-outro"
   let error = Jstr.v "hc-error"
+  let in' = Jstr.v "hc-in"
+  let in_parent = Jstr.v "hc-in-parent"
+  let out = Jstr.v "hc-out"
+  let out_parent = Jstr.v "hc-out-parent"
 end
 
 (* Parsing helpers *)
@@ -253,24 +255,20 @@ module Feedback = struct
     let feedback el = set Class.error false el; set Class.request true el in
     List.iter feedback (r :: fbs)
 
-  let error ~requestel:r fbs =
+  let error_request ~requestel:r fbs =
     let feedback el = set Class.error true el; set Class.request false el in
     List.iter feedback (r :: fbs)
 
-  let skip_effect ~requestel:r fbs =
+  let end_request ~requestel:r fbs =
     List.iter (set Class.request false) (r :: fbs)
 
-  let effect_no_intro = skip_effect
-  let effect_intro ~requestel:r fbs =
-    let feedback el = set Class.request false el; set Class.intro true el in
-    El.set_class Class.request false r;
-    List.iter feedback fbs
+  let remove ~parent ~removes b =
+    El.set_class Class.out_parent b parent;
+    List.iter (El.set_class Class.out b) removes
 
-  let effect_no_outro fbs = List.iter (El.set_class Class.intro false) fbs
-  let effect_end_outro fbs = List.iter (El.set_class Class.outro false) fbs
-  let effect_start_outro fbs =
-    let feedback el = set Class.intro false el; set Class.outro true el in
-    List.iter feedback fbs
+  let insert ~parent ~inserts b =
+    El.set_class Class.in_parent b parent;
+    List.iter (El.set_class Class.in' b) inserts
 
   let of_el el ~target = match El.at At.feedback el with
   | None -> [target]
@@ -285,61 +283,83 @@ module Effect = struct
   type kind = Inner | Inplace | Insert of Jstr.t | None' | Event of Jstr.t
   type t = kind * Dur_ms.t * Dur_ms.t
 
-  let do_intro ~requestel ~feedback intro =
-    if intro = 0
-    then (Feedback.effect_no_intro ~requestel feedback; Fut.return ())
-    else (Feedback.effect_intro ~requestel feedback; Fut.tick ~ms:intro)
+  let feedback_remove ~target kind ~delay =
+    let rem = match kind with
+    | Inner -> Some (target, El.children target)
+    | Inplace -> Some (El.parent target |> Option.get, [target])
+    | _ -> None
+    in
+    match rem with
+    | None -> Fut.tick ~ms:delay
+    | Some (parent, removes) ->
+        Feedback.remove ~parent ~removes true;
+        let* () = Fut.tick ~ms:delay in
+        Feedback.remove ~parent ~removes false;
+        Fut.return ()
 
-  let do_outro ~feedback outro =
-    if outro = 0 then (Feedback.effect_no_outro feedback; Fut.return ()) else
-    let* () = Feedback.effect_start_outro feedback; Fut.tick ~ms:outro in
-    Fut.return (Feedback.effect_end_outro feedback)
+  let feedback_insert ~parent ~inserts =
+    Feedback.insert ~parent ~inserts true;
+    (* Make sure we had a render of [true]. *)
+    ignore (G.request_animation_frame @@ fun _ ->
+    ignore (G.request_animation_frame @@ fun _ ->
+            Feedback.insert ~parent ~inserts false))
 
-  let do_effect k ~target ~feedback html_part ~outro = match k with
-  | Inplace ->
-        (* XXX maybe we should do this for all adds. *)
-        let target_is_feedback = List.exists (( == ) target) feedback in
-        if target_is_feedback then begin
-          let el_parent = El.parent target |> Option.get in
-          let observe records o =
-            let feedback = ref [] in
-            for i = 0 to (Jv.Int.get records "length") - 1 do
-              let r = Jv.Jarray.get records i in
-              let adds = Jv.get r "addedNodes" in
-              for i = 0 to (Jv.Int.get adds "length") - 1 do
-                let n = El.of_jv @@ Jv.call adds "item" [|Jv.of_int i|] in
-                if El.is_el n
-                then (feedback := n :: !feedback)
-              done;
-            done;
-            do_outro ~feedback:!feedback outro
-          in
-          let obs = Mutation_observer.create observe in
-          let opts = Jv.obj [| "childList", Jv.true' |] in
-          Mutation_observer.observe obs el_parent opts;
-          Jv.Jstr.set (El.to_jv target) "outerHTML" html_part;
-          Fut.return ()
-        end else begin
-          Jv.Jstr.set (El.to_jv target) "outerHTML" html_part;
-          do_outro ~feedback outro
-        end
-  | Inner ->
-      Jv.Jstr.set (El.to_jv target) "innerHTML" html_part;
-      do_outro ~feedback outro
-  | Insert pos ->
-      let args = Jv.[|of_jstr pos; of_jstr html_part|] in
-      ignore @@ Jv.call (El.to_jv target) "insertAdjacentHTML" args;
-      do_outro ~feedback outro
-  | Event ev ->
-      let ev = Ev.create (Ev.Type.create ev) in
-      ignore (Ev.dispatch ev (El.as_target target));
-      do_outro ~feedback outro
-  | None' ->
-      do_outro ~feedback outro
+  let apply_inplace ~target html_part =
+    let parent = El.parent target |> Option.get in
+    let observe records o =
+      let inserts = ref [] in
+      for i = 0 to (Jv.Int.get records "length") - 1 do
+        let r = Jv.Jarray.get records i in
+        let adds = Jv.get r "addedNodes" in
+        for i = 0 to (Jv.Int.get adds "length") - 1 do
+          let n = El.of_jv @@ Jv.call adds "item" [|Jv.of_int i|] in
+          if El.is_el n
+          then (inserts := n :: !inserts)
+        done;
+      done;
+      feedback_insert ~parent ~inserts:!inserts
+    in
+    let obs = Mutation_observer.create observe in
+    let opts = Jv.obj [| "childList", Jv.true' |] in
+    Mutation_observer.observe obs parent opts;
+    Jv.Jstr.set (El.to_jv target) "outerHTML" html_part
 
-  let apply ~requestel ~target ~feedback (k, intro, outro) html_part =
-    let* () = do_intro ~requestel ~feedback intro in
-    do_effect k ~target ~feedback html_part ~outro
+  let apply_inner ~target html_part =
+    Jv.Jstr.set (El.to_jv target) "innerHTML" html_part;
+    feedback_insert ~parent:target ~inserts:(El.children target)
+
+  let apply_insert ~target pos html_part =
+    let before el = El.of_jv @@ Jv.call (El.to_jv el) "previousSibling" [||] in
+    let after el = El.of_jv @@ Jv.call (El.to_jv el) "nextSibling" [||] in
+    let args = Jv.[|of_jstr pos; of_jstr html_part|] in
+    ignore @@ Jv.call (El.to_jv target) "insertAdjacentHTML" args;
+    let parent, insert =
+      if Jstr.(equal pos (v "beforebegin"))
+      then El.parent target |> Option.get, before target else
+      if Jstr.(equal pos (v "afterbegin"))
+      then target, List.hd (El.children target) else
+      if Jstr.(equal pos (v "beforeend"))
+      then target, List.hd (List.rev (El.children target)) else
+      if Jstr.(equal pos (v "afterend"))
+      then El.parent target |> Option.get, after target else
+      assert false
+    in
+    feedback_insert ~parent ~inserts:[insert]
+
+  let apply_event ~target ev =
+    let ev = Ev.create (Ev.Type.create ev) in
+    ignore (Ev.dispatch ev (El.as_target target))
+
+  let apply ~target (kind, delay) html_part =
+    let* () = feedback_remove ~target kind ~delay in
+    begin match kind with
+    | Inplace -> apply_inplace ~target html_part
+    | Inner -> apply_inner ~target html_part
+    | Insert pos -> apply_insert ~target pos html_part
+    | Event ev -> apply_event ~target ev
+    | None' -> ()
+    end;
+    Fut.return ()
 
   let rec parse_kind = function
   | [] -> Parse.error (Jstr.v "missing effect")
@@ -358,26 +378,24 @@ module Effect = struct
   let of_jstr s =
     try
       let kind, ts = parse_kind (Parse.tokenize s) in
-      let intro, outro =
-        let rec loop intro outro = function
-        | [] -> intro, outro
+      let delay =
+        let rec loop delay = function
+        | [] -> delay
         | t :: _ as ts ->
             match Parse.kv ts with
-            | None -> intro, outro
+            | None -> delay
             | Some (k, v, ts) ->
-                if Jstr.(equal k (v "intro"))
-                then loop (Dur_ms.parse_value k v) outro ts else
-                if Jstr.(equal k (v "outro"))
-                then loop intro (Dur_ms.parse_value k v) ts else
+                if Jstr.(equal k (v "delay"))
+                then loop (Dur_ms.parse_value k v) ts else
                 Parse.error Jstr.(v "unknown key: " + k)
         in
-        loop 0 0 ts
+        loop 0 ts
       in
-      Ok (kind, intro, outro)
+      Ok (kind, delay)
     with Jv.Error e -> reword_error Jstr.(append (v "effect: ")) e
 
   let of_el el = match El.at At.effect el with
-  | None -> Ok (Inner, 0, 0)
+  | None -> Ok (Inner, 0)
   | Some s ->
       match of_jstr s with
       | Error e -> reword_error Jstr.(append (At.effect + v ": ")) e
@@ -400,7 +418,7 @@ module Header = struct
         match Uri.of_jstr ~base url with
         | Error e -> reword_error (header_error redirect) e
         | Ok url ->
-            Feedback.skip_effect ~requestel feedback;
+            Feedback.end_request ~requestel feedback;
             Window.set_location G.window url; (* goodbye *) Ok ()
 
   let response_reload ~requestel feedback hs =
@@ -409,7 +427,7 @@ module Header = struct
     | Some bv ->
         match Jstr.equal (Jstr.v "true") bv with
         | true ->
-            Feedback.skip_effect ~requestel feedback;
+            Feedback.end_request ~requestel feedback;
             Window.reload G.window; (* goodbye *) Ok ()
         | false ->
             if Jstr.equal (Jstr.v "false") bv then Ok () else
@@ -479,7 +497,8 @@ module Request = struct
         let url = real_url url in
         let q = Uri.Params.to_jstr (Form.Data.to_uri_params query) in
         let url = if Jstr.is_empty q then url else Jstr.(url + v "?" + q) in
-        let init = Fetch.Request.init ~method':meth () in
+        let redirect = Fetch.Request.Redirect.follow in
+        let init = Fetch.Request.init ~redirect ~method':meth () in
         Fetch.Request.v ~init url
     | false ->
         let url = real_url url in
@@ -487,7 +506,8 @@ module Request = struct
         | true -> Fetch.Body.of_form_data query
         | false -> Fetch.Body.of_uri_params (Form.Data.to_uri_params query)
         in
-        let init = Fetch.Request.init ~method':meth ~body () in
+        let redirect = Fetch.Request.Redirect.follow in
+        let init = Fetch.Request.init ~redirect ~method':meth ~body () in
         Fetch.Request.v ~init url
 end
 
@@ -496,20 +516,20 @@ let http_request requestel meth url query target effect feedback =
   Feedback.start_request ~requestel feedback;
   let resp = Fetch.request (Request.to_fetch_request url meth query) in
   let resp = Fut.bind resp @@ function
-  | Error _ as e -> Feedback.error ~requestel feedback; Fut.return e
+  | Error _ as e -> Feedback.error_request ~requestel feedback; Fut.return e
   | Ok resp ->
       let hs = Fetch.Response.headers resp in
       (* TODO do stuff with status ? *)
       match Header.handle_response ~requestel feedback hs with
-      | Error _ as e -> Feedback.error ~requestel feedback; Fut.return e
+      | Error _ as e -> Feedback.error_request ~requestel feedback; Fut.return e
       | Ok () ->
           let* html = Fetch.Body.text (Fetch.Response.as_body resp) in
           match html with
-          | Error _ as e -> Feedback.error ~requestel feedback; Fut.return e
+          | Error _ as e ->
+              Feedback.error_request ~requestel feedback; Fut.return e
           | Ok html ->
-              let* () =
-                Effect.apply ~requestel ~target ~feedback effect html
-              in
+              Feedback.end_request ~requestel feedback;
+              let* () = Effect.apply ~target effect html in
               Fut.ok ()
   in
   Fut.await resp (el_log_if_error requestel);

@@ -1,9 +1,10 @@
-Hc — Connected hypertext for interactive web pages
-==================================================
+Hc — Connected hypertext for dynamic web pages
+==============================================
 %%VERSION%%
 
-Hc declares interactive web pages by using HTML data attributes to
-request and seamlessly integrate HTML fragments from the server.
+Hc declares dynamic web pages by using HTML data attributes to
+seamlessly update the page with HTML fragments requested from the
+server.
 
 Using hypertext as the interaction substrate keeps logic on the server
 and, in the simplest cases, reduces front-end client code to a generic

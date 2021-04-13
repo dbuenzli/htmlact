@@ -21,9 +21,9 @@ let style = {css|
 .record label::after { content: ":" }
 .record div + div { margin-top: var(--size-fourth-line); }
 .record div:last-child { margin-top: var(--size-half-line); }
-input { transition: all var(--dur-short); }
-.hc-outro input.field { background: white; }
-.hc-intro input.field { background: white; }
+.record input { transition: all var(--dur-short); }
+.hc-in input.field { background: white; }
+.hc-out input.field { background: white; }
 |css}
 
 let field_label n = Ht.splice [Ht.label [Ht.txt n]]
@@ -34,9 +34,8 @@ let input_field = Example.input_field
 let view urlf b =
   let edit_button urlf b =
     let r = Example.uf urlf "bookmark/%d/editor" b.Bookmark.id in
-    let e = Hc.(effect ~outro_ms:1 (* FIXME *) `Inplace) in
-    let at = Hc.[request r; target ".record:up"; e] in
-    Example.button ~at "Edit"
+    let e = Hc.effect `Inplace in
+    Example.button ~at:Hc.[request r; target ".record:up"; e] "Edit"
   in
   let at = [At.class' "record"] in
   Ht.div ~at [
@@ -48,12 +47,12 @@ let view urlf b =
 let editor_view urlf b =
   let cancel_button urlf b =
     let r = Example.uf urlf "bookmark/%d" b.Bookmark.id in
-    let e = Hc.(effect ~intro_ms:Dur.short `Inplace) in
+    let e = Hc.(effect ~delay_ms:Dur.short `Inplace) in
     let at = Hc.[request r; target ".record:up"; e] in
     Example.button ~at "Cancel"
   in
   let r = Hc.request ~meth:`PUT (Example.uf urlf "bookmark/%d" b.Bookmark.id) in
-  let e = Hc.(effect ~intro_ms:Dur.short `Inplace) in
+  let e = Hc.(effect ~delay_ms:Dur.short `Inplace) in
   Ht.form ~at:[At.class' "record"; r; e] [
     Ht.div [ field_label "Name"; Ht.sp;
              input_field ~name:"name" ~type':"text" b.Bookmark.name ];
@@ -62,7 +61,7 @@ let editor_view urlf b =
     Ht.div [ field_label "Description"; Ht.sp;
              input_field ~name:"description" ~type':"text"
                b.Bookmark.description ];
-    Ht.div [ Example.submit "Save"; cancel_button urlf b ]]
+    Ht.div [ cancel_button urlf b; Example.submit "Save" ]]
 
 let put_bookmark r b =
   let* q = Req.to_query r in
