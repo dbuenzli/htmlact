@@ -28,8 +28,7 @@ tr.hc-out { opacity: 0; transition: all var(--dur-medium) ease-out; }
 let delete_bookmark urlf b =
   let url = Example.uf urlf "bookmark/%d" b.Bookmark.id in
   let r = Hc.request ~meth:`DELETE url in
-  let t = Hc.target "tr:up" in
-  let e = Hc.effect ~delay_ms:Hc.Dur.medium `Inplace in
+  let t = Hc.target "tr:up" and e = Hc.effect `Inplace in
   Example.button ~at:[r; t; e] "Delete"
 
 let deletable_bookmark urlf b =

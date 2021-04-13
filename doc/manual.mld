@@ -97,10 +97,27 @@ v}
 
 {2:class_hc_out [hc-out] and [hc-out-parent]}
 
-These classes are applied for the delay specified by
-the {{!data_effect}data-effect} before removing elements from the
-DOM. [hc-out] is applied on elements that are being removed and
-[hc-out-parent] is applied on the parent of these elements.
+These classes are applied on elements (if any) that will be removed by
+the {{!data_effect}data-effect} just before it is performed.  [hc-out]
+is applied on elements that will be removed and [hc-out-parent] is
+applied on the parent of these elements.
+
+To determine the amount of time during which the classes are applied
+before the effect is performed, first the classes are applied on the
+elements. Then for each of these elements we take the maximum value of
+either CSS attribute [--hc-out-duration], [animation-duration] or
+[transition-duration]. The maximal value of all these durations defines
+the duration.
+
+If the elements animating are descendent of those that are classified
+by [hc-out] or [hc-out-parent]. Simply use the [--hc-out-duration]
+attribute on the [.hc-out] elements. For example the following ensures
+that the [hc-out] and [hc-out-parent] classes are maintained on the
+elements to be removed for 500ms before being effectively removed:
+
+{v
+.hc-out { --hc-out-duration: 500ms }
+v}
 
 {1:attref Attribute reference}
 
@@ -180,7 +197,7 @@ on which the {{!data_request}request} response performs its
 {{!data_effect}effect}. If unspecified this is the
 {{!data_request}request element} itself.
 
-{2:data_effect [data-effect="<eff> [delay:<dur>]"]}
+{2:data_effect [data-effect="<eff>"]}
 
 The value [<eff>] determines the way the HTML response is used on
 the {{!data_target}target}. This can be:
@@ -196,11 +213,7 @@ the {{!data_target}target}. This can be:
 {- [event <ev>] to discard the HTML response but trigger an event named
    [<ev>] on the target}}
 
-The value [<dur>] of [delay:] specifies a duration in [s] or [ms] to
-wait before applying the effect. During that time the [hc-out]
-and [hc-out-parent] are specified on the elements that will be removed.
-
-If unspecified this is [inner delay:0ms].
+If unspecified this is [inner].
 
 {2:data_feedback [data-feedback="<sel>"]}
 

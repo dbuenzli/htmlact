@@ -283,17 +283,41 @@ module Effect = struct
   type kind = Inner | Inplace | Insert of Jstr.t | None' | Event of Jstr.t
   type t = kind * Dur_ms.t * Dur_ms.t
 
-  let feedback_remove ~target kind ~delay =
+  let remove_duration el =
+    let style_duration k el =
+      let dur = El.computed_style k el in
+      if Jstr.is_empty dur then 0 else
+      match Dur_ms.of_jstr dur with
+      | Some d -> d
+      | None ->
+          let err = Jstr.(k + v ": parse error: " + dur) in
+          el_log_if_error el (error err); 0
+    in
+    let dur = style_duration (Jstr.v "--hc-out-duration") el in
+    let dur1 = style_duration (Jstr.v "animation-duration") el in
+    let dur2 = style_duration (Jstr.v "transition-duration") el in
+    let dur = if dur > dur1 then dur else dur1 in
+    let dur = if dur > dur2 then dur else dur2 in
+    dur
+
+  let remove_duration ~parent ~removes =
+    let dur acc el =
+      let dur = remove_duration el in
+      if dur > acc then dur else acc
+    in
+    List.fold_left dur 0 (parent :: removes)
+
+  let feedback_remove ~target kind =
     let rem = match kind with
     | Inner -> Some (target, El.children target)
     | Inplace -> Some (El.parent target |> Option.get, [target])
     | _ -> None
     in
     match rem with
-    | None -> Fut.tick ~ms:delay
+    | None -> Fut.return ()
     | Some (parent, removes) ->
         Feedback.remove ~parent ~removes true;
-        let* () = Fut.tick ~ms:delay in
+        let* () = Fut.tick ~ms:(remove_duration ~parent ~removes) in
         Feedback.remove ~parent ~removes false;
         Fut.return ()
 
@@ -350,8 +374,8 @@ module Effect = struct
     let ev = Ev.create (Ev.Type.create ev) in
     ignore (Ev.dispatch ev (El.as_target target))
 
-  let apply ~target (kind, delay) html_part =
-    let* () = feedback_remove ~target kind ~delay in
+  let apply ~target kind html_part =
+    let* () = feedback_remove ~target kind in
     begin match kind with
     | Inplace -> apply_inplace ~target html_part
     | Inner -> apply_inner ~target html_part
@@ -378,24 +402,12 @@ module Effect = struct
   let of_jstr s =
     try
       let kind, ts = parse_kind (Parse.tokenize s) in
-      let delay =
-        let rec loop delay = function
-        | [] -> delay
-        | t :: _ as ts ->
-            match Parse.kv ts with
-            | None -> delay
-            | Some (k, v, ts) ->
-                if Jstr.(equal k (v "delay"))
-                then loop (Dur_ms.parse_value k v) ts else
-                Parse.error Jstr.(v "unknown key: " + k)
-        in
-        loop 0 ts
-      in
-      Ok (kind, delay)
+      if ts <> [] then Parse.error Jstr.(v "unexpected token: " + List.hd ts);
+      Ok kind
     with Jv.Error e -> reword_error Jstr.(append (v "effect: ")) e
 
   let of_el el = match El.at At.effect el with
-  | None -> Ok (Inner, 0)
+  | None -> Ok Inner
   | Some s ->
       match of_jstr s with
       | Error e -> reword_error Jstr.(append (At.effect + v ": ")) e

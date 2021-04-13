@@ -21,7 +21,7 @@ let style = {css|
 .record label::after { content: ":" }
 .record div + div { margin-top: var(--size-fourth-line); }
 .record div:last-child { margin-top: var(--size-half-line); }
-.record input { transition: all var(--dur-short); }
+.hc-out, .record input { transition: all var(--dur-short); }
 .hc-in input.field { background: white; }
 .hc-out input.field { background: white; }
 |css}
@@ -33,9 +33,9 @@ let input_field = Example.input_field
 
 let view urlf b =
   let edit_button urlf b =
-    let r = Example.uf urlf "bookmark/%d/editor" b.Bookmark.id in
-    let e = Hc.effect `Inplace in
-    Example.button ~at:Hc.[request r; target ".record:up"; e] "Edit"
+    let r = Hc.request (Example.uf urlf "bookmark/%d/editor" b.Bookmark.id) in
+    let t = Hc.target ".record:up" and e = Hc.effect `Inplace in
+    Example.button ~at:[r; t; e] "Edit"
   in
   let at = [At.class' "record"] in
   Ht.div ~at [
@@ -46,13 +46,12 @@ let view urlf b =
 
 let editor_view urlf b =
   let cancel_button urlf b =
-    let r = Example.uf urlf "bookmark/%d" b.Bookmark.id in
-    let e = Hc.(effect ~delay_ms:Dur.short `Inplace) in
-    let at = Hc.[request r; target ".record:up"; e] in
-    Example.button ~at "Cancel"
+    let r = Hc.request (Example.uf urlf "bookmark/%d" b.Bookmark.id) in
+    let t = Hc.target ".record:up" and e = Hc.effect `Inplace in
+    Example.button ~at:[r; t; e] "Cancel"
   in
   let r = Hc.request ~meth:`PUT (Example.uf urlf "bookmark/%d" b.Bookmark.id) in
-  let e = Hc.(effect ~delay_ms:Dur.short `Inplace) in
+  let e = Hc.effect `Inplace in
   Ht.form ~at:[At.class' "record"; r; e] [
     Ht.div [ field_label "Name"; Ht.sp;
              input_field ~name:"name" ~type':"text" b.Bookmark.name ];

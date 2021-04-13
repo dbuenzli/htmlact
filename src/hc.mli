@@ -68,7 +68,7 @@ type effect_kind =
 [ `Inner | `Inplace | `Beforebegin | `Afterbegin | `Beforeend
 | `Afterend | `None | `Event of string ]
 
-val effect : ?delay_ms:int -> effect_kind -> At.t
+val effect : effect_kind -> At.t
 
 
 (*---------------------------------------------------------------------------

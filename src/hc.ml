@@ -41,9 +41,7 @@ let effect_kind_to_string = function
 | `Beforeend -> "beforeend" | `Afterend -> "afterend"
 | `None -> "none" | `Event ev -> "event " ^ ev
 
-let effect ?delay_ms:d k =
-  let delay = match d with None -> "" | Some d -> strf " delay:%dms" d in
-  At.v "data-effect" (effect_kind_to_string k ^ delay)
+let effect k = At.v "data-effect" (effect_kind_to_string k)
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers
