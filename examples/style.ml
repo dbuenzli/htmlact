@@ -137,7 +137,7 @@ input.field
 
 .hc-request .spinner + span { filter: blur(0.5px); opacity: 0.5; }
 
-.spinner
+.button .spinner
 { visibility: hidden;
   width: calc(0.9 * var(--size-line)); height: calc(0.9 * var(--size-line));
   /* Centering */

@@ -28,7 +28,7 @@ let init () =
         description = "The OCaml website"; broken = false; };
   set { id = 2; name = "Haskell"; link = "https://haskell.org";
         description = "The Haskell language website"; broken = false; };
-  set { id = 3; name = "Wikipedia"; link = "Wikipedia";
+  set { id = 3; name = "Wikipedia"; link = "https://wikipedia.org";
         description ="The Free Encyclopedia"; broken = false; };
   set { id = 4; name = "Old Caml site"; link = "https://caml.inria.fr";
         description = "The old OCaml website"; broken = false; };

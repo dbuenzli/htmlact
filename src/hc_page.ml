@@ -158,47 +158,43 @@ end
 
 module Event = struct
   type name = Jstr.t
-  type modifier =
-  | Once | Debounce of Dur_ms.t | Throttle of Dur_ms.t | Filter of Jstr.t
+  type t =
+    { name : name;
+      once : bool;
+      debounce_ms : Dur_ms.t;
+      throttle_ms : Dur_ms.t;
+      filter : Jstr.t option;  }
 
-  type t = name * modifier list
-  let name (n, _) = n
+  let name e = e.name
   let mods (_, mods) = mods
 
   let parse_name = function
   | [] -> Parse.error (Jstr.v "missing event name")
   | t :: ts -> Jstr.trim t, ts
 
-  let rec parse_mod = function
-  | [] -> None
-  | t :: rest as ts ->
-      let t = Jstr.trim t in
-      if Jstr.is_empty t then parse_mod rest else
-      if Jstr.(equal t (v "once")) then Some (Once, rest) else
+  let rec parse_mods o d t f = function
+  | [] -> o, d, t, f
+  | tok :: rest as ts ->
+      let tok = Jstr.trim tok in
+      if Jstr.is_empty tok then parse_mods o d t f ts else
+      if Jstr.(equal tok (v "once")) then parse_mods true d t f ts else
       match Parse.kv ts with
-      | None -> None
+      | None -> o, d, t, f
       | Some (k, v, ts) ->
           if Jstr.(equal k (v "debounce"))
-          then Some (Debounce (Dur_ms.parse_value k v), ts) else
+          then parse_mods o (Dur_ms.parse_value k v) t f ts else
           if Jstr.(equal k (v "throttle"))
-          then Some (Throttle (Dur_ms.parse_value k v), ts) else
+          then parse_mods o d (Dur_ms.parse_value k v) f ts else
           if Jstr.(equal k (v "filter"))
-          then Some (Filter v, ts) else
+          then parse_mods o d t (Some v) ts else
           Parse.error (Parse.error_key_unknown k )
 
   let of_jstr s =
     try
       let name, ts = parse_name (Parse.tokenize s) in
-      let mods =
-        let rec loop acc = function
-        | [] -> acc
-        | ts ->
-            match parse_mod ts with
-            | None -> acc | Some (m, ts) -> loop (m :: acc) ts
-        in
-        loop [] ts
+      let once, debounce_ms, throttle_ms, filter = parse_mods false 0 0 None ts
       in
-      Ok (name, mods)
+      Ok {name; once; debounce_ms; throttle_ms; filter}
     with Jv.Error e -> reword_error Jstr.(append (v "event: ")) e
 
   let of_el el = match El.at At.event el with
@@ -209,21 +205,60 @@ module Event = struct
       end
   | None ->
       let t = El.tag_name el in
-      let n =
+      let name =
         if Jstr.(equal t (v "form")) then Ev.Type.name Form.Ev.submit else
         if Jstr.(equal t (v "input") || equal t (v "textarea") ||
                  equal t (v "select"))
         then Ev.Type.name Ev.change
         else Ev.Type.name Ev.click
       in
-      Ok (n, [])
+      Ok { name; once = false; debounce_ms = 0; throttle_ms = 0; filter = None }
+
+
+  let filter ev e = match ev.filter with
+  | None -> true
+  | Some f -> Jv.to_bool (Jv.apply (Jv.get' Jv.global f) [| Ev.to_jv e |])
+
+  let once ev el cb =
+    let open Fut.Syntax in
+    let etype = Ev.Type.create ev.name in
+    let target = El.as_target el in
+    let* e = Ev.next etype target in
+    if not (filter ev e) then Fut.return () else
+    if ev.debounce_ms <= 0 then Fut.return (cb e) else
+    let* () = Fut.tick ~ms:ev.debounce_ms in
+    Fut.return (cb e)
+
+  let debounce ev cb =
+    let tid = ref 0 in
+    fun e ->
+      if not (filter ev e) then () else
+      (G.stop_timer !tid;
+       tid := G.set_timeout ~ms:ev.debounce_ms (fun () -> cb e))
+
+  let throttle ev cb =
+    let suppress = ref false in
+    fun e ->
+      if not (filter ev e) then () else
+      if !suppress then () else
+      (cb e; suppress := true;
+       ignore (G.set_timeout ~ms:ev.throttle_ms (fun () -> suppress := false)))
+
+  let listen ev el cb =
+    let etype = Ev.Type.create ev.name in
+    let target = El.as_target el in
+    let cb =
+      if ev.debounce_ms <> 0 then debounce ev cb else
+      if ev.throttle_ms <> 0 then throttle ev cb else
+      fun e -> if filter ev e then cb e else ()
+    in
+    Ok (Ev.listen etype cb target)
 
   let connect_el cb el () =
     el_log_if_error el @@
     let* ev = of_el el in
-    let name = name ev in
-    let ev = Ev.Type.create name in
-    Ok (Ev.listen ev cb (El.as_target el))
+    if ev.once then Ok (ignore (once ev el cb)) else
+    listen ev el cb
 
   let connect_descendents cb el =
     El.fold_find_by_selector ~root:el (connect_el cb) At.sel_request ()
@@ -280,8 +315,8 @@ end
 module Effect = struct
   open Fut.Syntax
 
-  type kind = Inner | Inplace | Insert of Jstr.t | None' | Event of Jstr.t
-  type t = kind * Dur_ms.t * Dur_ms.t
+  type kind = Element | Children | Insert of Jstr.t | None' | Event of Jstr.t
+  type t = kind
 
   let remove_duration el =
     let style_duration k el =
@@ -309,8 +344,8 @@ module Effect = struct
 
   let feedback_remove ~target kind =
     let rem = match kind with
-    | Inner -> Some (target, El.children target)
-    | Inplace -> Some (El.parent target |> Option.get, [target])
+    | Element -> Some (El.parent target |> Option.get, [target])
+    | Children -> Some (target, El.children target)
     | _ -> None
     in
     match rem with
@@ -328,7 +363,7 @@ module Effect = struct
     ignore (G.request_animation_frame @@ fun _ ->
             Feedback.insert ~parent ~inserts false))
 
-  let apply_inplace ~target html_part =
+  let apply_element ~target html_part =
     let parent = El.parent target |> Option.get in
     let observe records o =
       let inserts = ref [] in
@@ -348,7 +383,7 @@ module Effect = struct
     Mutation_observer.observe obs parent opts;
     Jv.Jstr.set (El.to_jv target) "outerHTML" html_part
 
-  let apply_inner ~target html_part =
+  let apply_children ~target html_part =
     Jv.Jstr.set (El.to_jv target) "innerHTML" html_part;
     feedback_insert ~parent:target ~inserts:(El.children target)
 
@@ -377,8 +412,8 @@ module Effect = struct
   let apply ~target kind html_part =
     let* () = feedback_remove ~target kind in
     begin match kind with
-    | Inplace -> apply_inplace ~target html_part
-    | Inner -> apply_inner ~target html_part
+    | Element -> apply_element ~target html_part
+    | Children -> apply_children ~target html_part
     | Insert pos -> apply_insert ~target pos html_part
     | Event ev -> apply_event ~target ev
     | None' -> ()
@@ -389,8 +424,8 @@ module Effect = struct
   | [] -> Parse.error (Jstr.v "missing effect")
   | t :: ts ->
       let t = Jstr.trim t in
-      if Jstr.(equal t (v "inner")) then Inner, ts else
-      if Jstr.(equal t (v "inplace")) then Inplace, ts else
+      if Jstr.(equal t (v "element")) then Element, ts else
+      if Jstr.(equal t (v "children")) then Children, ts else
       if Jstr.(equal t (v "event")) then match ts with
       | e :: ts -> Event e, ts | _ -> Parse.error (Jstr.v "missing event name")
       else
@@ -407,7 +442,7 @@ module Effect = struct
     with Jv.Error e -> reword_error Jstr.(append (v "effect: ")) e
 
   let of_el el = match El.at At.effect el with
-  | None -> Ok Inner
+  | None -> Ok Children
   | Some s ->
       match of_jstr s with
       | Error e -> reword_error Jstr.(append (At.effect + v ": ")) e
@@ -466,9 +501,11 @@ module Query = struct
     match Jstr.(equal (El.tag_name el) (Jstr.v "form")) with
     | true -> append_form_data fd (Form.Data.of_form (Form.of_el el))
     | false ->
-        match El.at Brr.At.Name.value el with
-        | None -> fd
-        | Some v -> Form.Data.append fd (Jstr.v "value") v; fd
+        let v = El.prop El.Prop.value el in
+        if Jstr.is_empty v then fd else
+        let n = El.prop El.Prop.name el in
+        let n = if Jstr.is_empty n then Jstr.v "value" else n in
+        Form.Data.append fd n v; fd
 
   let of_el el ~url =
     let ps = Uri.Params.of_jstr (Uri.query url) in

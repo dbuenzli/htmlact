@@ -1,49 +1,77 @@
 {0 Manual}
 
+{1:request Request elements}
+
+The idea behind [Hc] is to allow any HTML element to perform requests
+on the server for HTML fragments. These requests are specified via the
+{{!data_request}[data-request]} attribute. We call {e request
+elements}, elements that bear such an attribute.
+
+In the following example:
+
+{v
+<button data-request="POST /clicked"
+        data-effect="element">Replace me</button>
+v}
+
+The button is a request element. The request is performed when the
+event specified via the {{!data_event}[data-event]} attribute occurs.
+For buttons, if unspecified, this is the [click] event.
+
+What happens exactly on a request is fully specified by the connection
+cycle which we describe next.
+
 {1:connection Connection cycle}
 
-We first start by defining the kind of elements that take part in a
-connection cycle.
+Each request element defines a connection cycle in which a few other
+elements take part. All these other elements are always defined via
+attributes of the request element. They can all point to the same
+element. In particular if they are not specified they mostly default
+to the request element.
 
-All these elements are always defined via attributes of the request
-element. They can all point to the same element. In particular if they
-are not specified they mostly default to the request element.
+{ul
+{- The {e request} element. This is the element that has the
+   {{!data_request}[data-request]} attribute. It is the
+   element that specifies the connection to the server.}
+{- The {e event source} elements, specified by
+   the {{!data_event_src}[data-event-src]} attribute. They
+   are the elements whose events specified in the {{!data_event_src}
+   [data-event]} attribute triggers the request.}
+{- The {e query} elements, specified by the {{!data_query}[data-query]}
+   attribute. These are the element that are looked up to devise the
+   request's query data (in the request URL for [GET] and [HEAD], in
+   the body otherwise).}
+{- The {e target} element. This is the element specified by the
+   {{!data_target}[data-target]} attribute. It specifies the
+   relative location of the request response effect, that is where
+   and how the HTML fragment from the server gets inserted in the page.}
+{- The {e feedback} element(s), specified by {{!data_feedback}[data-feedback]}.
+   These are additional elements on which the connection cycle is feedback
+   using classes.}}
 
-    {ul
-    {- The {e request} element. This is the element that has the
-       {{!data_request}[data-request]} attribute. It is the
-       element that specifies the connection to the server.}
-    {- The {e event source} elements, specified by
-       the {{!data_event_src}[data-event-src]} attribute. They
-       are the elements whose events specified in the {{!data_event_src}
-       [data-event]} attribute trigger the request.}
-    {- The {e query} elements, specified by the
-       {{!data_query}[data-query]} attribute. These are the element
-       that are looked up to devise the request's query data.}
-    {- The {e target} element. This is the element specified by the
-       {{!data_target}[data-target]} attribute. It specifies the
-       relative location of the request response effect.}
-    {- The {e feedback} element(s), specified by
-       {{!data_feedback}[data-feedback]}. These are the elements on
-       which the connection cycle is feedback using classes.}}
-
-Every request element on the page cycle through the following
-steps.
+Every request element on the page cycle through the following steps.
 
 {ol
 {- Wait for the element's {{!data_event}request event} to happen.}
 {- Determine from the element's attributes, the {{!data_request}kind of
    request}, its {{!data_query}query} data, the
-       {{!data_target}target} element and
-       the {{!data_effect}effect} and the
-       {{!data_feedback}feedback} {e element(s)}.}
+   {{!data_target}target} element, the {{!data_effect}effect} and the
+   {{!data_feedback}feedback} {e element(s)}.}
 {- Perform the request with the {{:data_query}query}. Redirections
-   are followed.}
-{- Wait for the response.}
+   are followed. The request and feedback elements get classified
+   as [hc-request]}
+{- Wait for the response. If an error occurs classify
+   the request and feedback elements with [hc-error] and stop here.
+   Otherwise unclassify [hc-request] and proceed. }
 {- Process any {{!responses}special header} in the response. This
    may stop the cycle here (e.g. on {{!header_reload}reload} or
    {{!header_redirect}redirect}).}
-{- Perform the {{:data_effect}effect} on the {{:data_target}target}.}
+{- Using the HTML fragment found in the server response, perform the
+   {{:data_effect}effect} on the {{:data_target}target}. If elements
+   are being removed from the page, they first get classified with
+   {{!class_hc_out}[hc-out]} for a while before being effectively removed.
+   Elements that are introduced get transiently classified with
+   {{!class_hc_in}[hc-in].}}
 {- If the request is:
    {ul
    {- a websocket, loop to 1 with the same socket.}
@@ -57,18 +85,18 @@ The following classes can be used to track the connection cycle.
 
 {2:class_hc_request [hc-request]}
 
-This class is applied on the {{!data_request}request element} and
-the {{!data_feedback}feedback element} whenever a request is made
-on the server.
+This class is applied on the {{!data_request}request element} and the
+{{!data_feedback}feedback element(s)} whenever a request to the server
+is ongoing.
 
-This class can typically be used to trigger a CSS animation if
-the request is taking too long. For example assuming you
-have a [.spinner] in your request element, the following
-shows the spinner if the request is taking longer than 500ms.
+This class can be used to trigger a CSS animation if the request is
+taking too much time. For example assuming you have a [.spinner] in
+your request element, the following shows the spinner if the request
+is taking longer than 500ms.
 
 {v
 .spinner { visibility: hidden; }
-.hc-request > .spinner { animation: spin 1s linear 500ms infinite; }
+.hc-request .spinner { animation: spin 1s linear 500ms infinite; }
 
 @keyframes spin
 { from { visibility: visible; } to { transform: rotate(360deg); }}
@@ -82,25 +110,25 @@ This includes if the request returns a 4XX or 5XX result.
 
 {2:class_hc_in [hc-in] and [hc-in-parent]}
 
-These classes are applied for a small amount of time when the request
-effect is performed. [hc-in] is applied on the root of HTML trees that
-are inserted in the DOM by the effect, and [hc-in-parent] is applied
-on the parent in which the trees are inserted.
+These classes are applied for a small amount of time (one render
+frame) when the {{!data_effect}effect} is performed. [hc-in] is
+applied on the root of HTML trees that are inserted in the DOM by the
+effect. [hc-in-parent] is applied on their parent.
 
-These classes are typically used to trigger CSS animations. For
-example to fade in an element in 250ms on insertion use:
+These classes are used to trigger CSS animations. For example to fade
+in an element in 250ms on insertion use:
 
 {v
-.my-element.hc-in { opacity: 0 }
+.my-element.hc-in { opacity: 0; }
 .my-element { opacity: 1; transition: opacity 250ms; }
 v}
 
 {2:class_hc_out [hc-out] and [hc-out-parent]}
 
-These classes are applied on elements (if any) that will be removed by
-the {{!data_effect}data-effect} just before it is performed.  [hc-out]
-is applied on elements that will be removed and [hc-out-parent] is
-applied on the parent of these elements.
+These classes are applied on elements (if any) that are removed by the
+{{!data_effect}effect} just before it is performed.  [hc-out] is
+applied on elements that will be removed. [hc-out-parent] is on their
+parent.
 
 To determine the amount of time during which the classes are applied
 before the effect is performed, first the classes are applied on the
@@ -110,10 +138,11 @@ either CSS attribute [--hc-out-duration], [animation-duration] or
 the duration.
 
 If the elements animating are descendent of those that are classified
-by [hc-out] or [hc-out-parent]. Simply use the [--hc-out-duration]
-attribute on the [.hc-out] elements. For example the following ensures
-that the [hc-out] and [hc-out-parent] classes are maintained on the
-elements to be removed for 500ms before being effectively removed:
+by [hc-out] or [hc-out-parent], use the [--hc-out-duration] attribute
+on the [.hc-out] elements to set the time needed. For example the
+following ensures that the [hc-out] and [hc-out-parent] classes are
+maintained on the elements to be removed for 500ms before being
+effectively removed:
 
 {v
 .hc-out { --hc-out-duration: 500ms }
@@ -161,21 +190,14 @@ otherwise in the request body encoded with
 [application/x-www-form-urlencoded] unless there is a file input in
 which case [multipart/form-data] is used.
 
-{2:data_event [data-event="[<ev>] <mod>*"]}
+{2:data_event [data-event="<ev> <mod>*"]}
 
 [<ev>] is the name of the JavaScript event of the
-{{!data_event_src}event source} that triggers requests. Multiple
-events can be specified by separating them with a comma.
+{{!data_event_src}event source} that triggers requests. [<mod>] are
+modifiers for the event:
 
-If [<ev>] is unspecified this is:
 {ul
-{- [submit] for [form] elements.}
-{- [change] for [input], [textarea] and [select].}
-{- [click] otherwise.}}
-
-[<mod>] are modifiers for the event:
-{ul
-{- [once], the event is triggered only once}
+{- [once], the event is triggered only once.}
 {- [debounce:<dur>], a debouncing time, the request only
    occurs after duration [<time>] of the {e last} event occurence.}
 {- [throttle:<dur>], a throttling time, the request occurs
@@ -183,6 +205,12 @@ If [<ev>] is unspecified this is:
 {- [filter:<jsfun>], name of a filtering function. The function
    is given the requesting element and the event, if it returns
    [false] the event did not occur.}}
+
+If the attribute is unspecified this is:
+{ul
+{- [submit] for [form] elements.}
+{- [change] for [input], [textarea] and [select].}
+{- [click] otherwise.}}
 
 {2:data_event_src [data-event-src="<sel>"]}
 
@@ -203,8 +231,8 @@ The value [<eff>] determines the way the HTML response is used on
 the {{!data_target}target}. This can be:
 
 {ul
-{- [inner] to replaces the children of the target (default).}
-{- [inplace] to replaces the target itself.}
+{- [children] to replaces the children of the target (default).}
+{- [element] to replaces the target itself.}
 {- [beforebegin] to insert before the target.}
 {- [afterbegin] to insert before the first child of the target.}
 {- [beforeend] to insert after the last child of the target.}
@@ -213,40 +241,37 @@ the {{!data_target}target}. This can be:
 {- [event <ev>] to discard the HTML response but trigger an event named
    [<ev>] on the target}}
 
-If unspecified this is [inner].
+If unspecified this is [children].
 
 {2:data_feedback [data-feedback="<sel>"]}
 
-The DOM element(s), as selected by [<sel>], on which the connection
-cycle is feedback using classes. If unspecified this is the
-{{!data_target}target element}. See {!css_classes}.
+DOM elements in addition to {{!data_target}target element} on which
+the connection cycle is feedback with
+{{!class_hc_request}[hc-request]} and {{!class_hc_error}[hc-error]}.
 
 {1:selector Selector syntax}
 
-    Attributes of [hc] use
-    {{:https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors}
-    CSS selectors} with
-    {{:https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector}
-    [querySelector]} to gather query data and target response
-    effects. However CSS selectors have no syntax for addressing
-    ancestors. We slightly extend the syntax to allow it because in
-    many cases this eschews the need to use element identifiers which
-    improves modularity – use with care, it can also improve
-    {e obscurity}.
+Attributes of [hc] use
+{{:https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors}CSS
+selectors} with
+{{:https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector}
+[querySelector]} to gather query data and target response effects. However
+CSS selectors have no syntax for addressing ancestors. We slightly extend the
+syntax to allow it because in many cases this eschews the need to use
+element identifiers which improves modularity – use with care, it can
+also improve {e obscurity}.
 
-    We allow a CSS selector to be prefixed by a sequence of
-    ancestor specifications which select the root on which the CSS
-    selector is then applied. This provides full tree addressing:
-    first move up to find an ancestor and then down by applying
-    the CSS selector to it.
+We allow a CSS selector to be prefixed by a sequence of ancestor
+specifications which select the root on which the CSS selector is then
+applied. This provides full tree addressing: first move up to find an
+ancestor and then down by applying the CSS selector to it.
 
-    An ancestor specification is made of an optional element, optional
-    classes and the made up [:up] pseudo-class. The semantic is to
-    move up from the element by following the up selectors from
-    left-to-right and then apply the CSS selector on ancestor that
-    was found.
+An ancestor specification is made of an optional element, optional
+classes and the made up [:up] pseudo-class. The semantic is to move up
+from the element by following the up selectors from left-to-right and
+then apply the CSS selector on ancestor that was found.
 
-    Here examples:
+Examples:
 {v
   :up                # parent
   :up :up            # parent's parent
@@ -256,9 +281,10 @@ cycle is feedback using classes. If unspecified this is the
   ul.beet.root:up    # ul ancestor with classes beet and root
   div:up .beet       # div ancestor, beet classified descendents
 v}
-    The full syntax as an
-    {{:https://tools.ietf.org/html/rfc5234}RFC 5234 ABNF} grammar is
-    described as follows:
+
+The full syntax as an {{:https://tools.ietf.org/html/rfc5234}RFC 5234 ABNF}
+grammar is described as follows:
+
 {v
          sel = *(up SP) css-selector
           up = [[el] *class] ":up"
@@ -270,10 +296,8 @@ v}
 {1:responses Response HTTP headers}
 
 The server should respond with an HTML fragment to be inserted with
-respect to the {{!data_target}request target}.
-
-Additionally it can use the headers described next to control the
-client.
+respect to the {{!data_target}request target}. Additionally it can use
+the headers described next to control the client.
 
 {2:header_redirect [hc-redirect: <url>]}
 
@@ -281,7 +305,7 @@ Redirects the page to [<url>]. The body of the response is ignored by [Hc].
 
 {2:header_reload [hc-reload: true]}
 
-Reloads the page. The body of the response is igored by [Hc]. *)
+Reloads the page. The body of the response is igored by [Hc].
 
 {1:request Request HTTP headers}
 

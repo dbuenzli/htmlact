@@ -14,7 +14,8 @@ let examples =
   [ (module Click_to_edit : Example.T);
     (module Update_rows : Example.T);
     (module Click_to_load : Example.T);
-    (module Delete_row : Example.T); ]
+    (module Delete_rows : Example.T);
+    (module Autocomplete : Example.T); ]
 
 let index_page =
   let intro =
@@ -22,20 +23,20 @@ let index_page =
     let hc_link = link ~href:"https://erratique.ch/software/hc" "Hc" in
     let webs_link = link ~href:"https://erratique.ch/software/webs" "Webs" in
     let htmx_link = link ~href:"https://htmx.org/examples/" "these ones" in
-    Ht.p
-      [Ht.txt "This is a list of page interaction patterns implemented
-               using "; hc_link; Ht.txt " and "; webs_link;
-       Ht.small [Ht.txt " (not required, you can use your own)."]; Ht.txt
-         " Most of these examples are a remix of "; htmx_link; Ht.txt "."]
+    El.p
+      [El.txt "This is a list of page interaction patterns implemented
+               using "; hc_link; El.txt " and "; webs_link;
+       El.small [El.txt " (not required, you can use your own)."]; El.txt
+         " Most of these examples are a remix of "; htmx_link; El.txt "."]
   in
   let examples =
     let li (module E : Example.T) =
       let href = At.href (Http.Path.encode [E.prefix; ""]) in
-      let name = Ht.span ~at:At.[class' "link"] [Ht.txt E.name] in
-      let text = [name; Ht.small [Ht.sp; Ht.txt E.synopsis]] in
-      Ht.li [ Ht.a ~at:[href] text ]
+      let name = El.span ~at:At.[class' "link"] [El.txt E.name] in
+      let text = [name; El.small [El.sp; El.txt E.synopsis]] in
+      El.li [ El.a ~at:[href] text ]
     in
-    Ht.ol ~at:At.[class' "examples"] (List.map li examples)
+    El.ol ~at:At.[class' "examples"] (List.map li examples)
   in
   let content = [intro; examples] in
   Example.page ~id:"" ~title:"Hc examples" content
@@ -49,7 +50,7 @@ let example_map =
 let serve_examples r =
   let prefix = List.hd (Req.path r) in
   match Smap.find_opt prefix example_map with
-  | None -> Ok (Resp.v ~explain:"No such example" Http.s404_not_found)
+  | None -> Resp.not_found_404 ~explain:"No such example" ()
   | Some (module E : Example.T) ->
       let* r = Req.forward_service ~strip:[prefix] r in
       E.serve r
@@ -62,7 +63,7 @@ let service file_root r =
       Webs_unix.send_file r file
   | [""] ->
       let* _m = Req.Allow.(meths [get] r) in
-      Ok (Resp.html Http.s200_ok index_page)
+      Ok (Resp.html Http.ok_200 index_page)
   | _ ->
       serve_examples r
 

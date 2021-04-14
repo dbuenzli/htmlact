@@ -14,20 +14,20 @@ module type T = sig
   val serve : Req.t -> (Resp.t, Resp.t) result
 end
 
-val page : ?style:string -> id:string -> title:string -> Ht.part list -> string
-val part : Ht.part list -> string
+val page : ?style:string -> id:string -> title:string -> El.html list -> string
+val part : El.html list -> string
 
-val table : ?headers:string list -> Ht.part list list -> Ht.part
-val link : href:string -> string -> Ht.part
-val description : Ht.part list -> Ht.part
+val table : ?headers:string list -> El.html list list -> El.html
+val link : href:string -> string -> El.html
+val description : El.html list -> El.html
 
-val submit : ?at:At.t list -> string -> Ht.part
-val button : ?at:At.t list -> string -> Ht.part
+val submit : ?at:At.t list -> string -> El.html
+val button : ?at:At.t list -> string -> El.html
 val input_field :
   ?autocomplete:bool -> ?at:At.t list -> type':string -> name:string ->
-  string -> Ht.part
+  string -> El.html
 
-val field : ?at:At.t list -> Ht.part list -> Ht.part
+val field : ?at:At.t list -> El.html list -> El.html
 
 type urlf
 val urlf : Req.t -> urlf
@@ -37,6 +37,8 @@ val uf : urlf -> ('a, unit, string, string) format4 -> 'a
 val req_decode : Req.t -> (Req.t -> 'a) -> ('a, Resp.t) result
 val req_decode_query :
   Req.t -> (Req.t -> Http.Query.t -> 'a) -> ('a, Resp.t) result
+
+val starts_with : prefix:string -> string -> bool
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

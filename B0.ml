@@ -82,7 +82,7 @@ let default =
       "ocamlbuild", {|build|};
       "topkg", {|build & >= "1.0.3"|};
       "brr", "";
-      "webs", {|with-test|};
+      "webs", "";
       "js_of_ocaml-compiler", {|>= "3.7.1"|};
     ]
     |> tag B0_opam.tag

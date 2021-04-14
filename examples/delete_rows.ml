@@ -13,46 +13,47 @@ let id = __MODULE__
 let name = "Delete rows"
 let synopsis = "Delete a table row."
 let prefix = "delete-rows"
-let description = Example.description [ Ht.txt
+let description = Example.description [ El.txt
   "Each line has a button that sends a delete request for the bookmark.
-   The empty response deletes the table row. An effect introduction duration
-   allows to fade out the row before it is replaced by nothing." ]
+   The empty response deletes the table row." ]
 
 let style = {css|
 tr td:nth-child(1) { min-width:10ex; }
 tr td:nth-child(2) { min-width:20ex; }
 tr.broken td:nth-child(1) { color: rgba(var(--redish)); }
-tr.hc-out { opacity: 0; transition: all var(--dur-medium) ease-out; }
+
+tr { transition: all var(--dur-medium); }
+tr.hc-out { opacity: 0 }
+.hc-in tbody tr
+{ opacity: 0; transform: translateY(calc(-1 * var(--size-half-line))) }
 |css}
 
 let delete_bookmark urlf b =
   let url = Example.uf urlf "bookmark/%d" b.Bookmark.id in
   let r = Hc.request ~meth:`DELETE url in
-  let t = Hc.target "tr:up" and e = Hc.effect `Inplace in
+  let t = Hc.target "tr:up" and e = Hc.effect `Element in
   Example.button ~at:[r; t; e] "Delete"
 
 let deletable_bookmark urlf b =
   let status = if b.Bookmark.broken then "broken" else "alive" in
-  Ht.tr ~at:At.[class' status]
-    [ Ht.td [Ht.txt (String.capitalize_ascii status)];
-      Ht.td [Ht.a ~at:At.[href b.Bookmark.link] [Ht.txt b.Bookmark.name]];
-      Ht.td [delete_bookmark urlf b]; ]
+  El.tr ~at:At.[class' status]
+    [ El.td [El.txt (String.capitalize_ascii status)];
+      El.td [El.a ~at:At.[href b.Bookmark.link] [El.txt b.Bookmark.name]];
+      El.td [delete_bookmark urlf b]; ]
 
 let table_headers =
-  let cell txt = Ht.th [Ht.txt txt] in
-  Ht.tr [cell "Status"; cell "Bookmark"; Ht.th []]
+  let cell txt = El.th [El.txt txt] in
+  El.tr [cell "Status"; cell "Bookmark"; El.th []]
 
 let table_view urlf bs =
-  Ht.table [
-    Ht.thead [table_headers];
-    Ht.tbody (List.map (deletable_bookmark urlf) bs)]
+  let bs = List.map (deletable_bookmark urlf) bs in
+  El.table [ El.thead [table_headers]; El.tbody bs]
 
 let actions urlf =
   let r = Hc.request ~meth:`POST (Example.uf urlf "?action=restore") in
-  let t = Hc.target ":up :up table" in
-  let e = Hc.effect `Inplace in
+  let t = Hc.target ":up :up table" and e = Hc.effect `Element in
   let restore = Example.button ~at:[r; t; e] "Restore deleted" in
-  Ht.div [restore]
+  El.div [restore]
 
 let index r =
   let urlf = Example.urlf r in
@@ -60,38 +61,35 @@ let index r =
   match m with
   | `GET ->
       let bookmarks = table_view urlf (Bookmark.all ()) in
-      let content = Ht.splice [bookmarks; actions urlf] in
+      let content = El.splice [bookmarks; actions urlf] in
       let page = Example.page ~style ~id ~title:name [description; content] in
-      Ok (Resp.html Http.s200_ok page)
+      Ok (Resp.html Http.ok_200 page)
   | `POST ->
       let* q = Req.to_query r in
       match Http.Query.find "action" q with
       | Some "restore" ->
           Bookmark.restore_deleted ();
           let part = Example.part [table_view urlf (Bookmark.all ())] in
-          Ok (Resp.html Http.s200_ok part)
+          Ok (Resp.html Http.ok_200 part)
       | v ->
-        let some = strf "unknown action %s" in
-        let explain = Option.fold ~none:"missing action" ~some v in
-        Error (Resp.v ~explain Http.s400_bad_request)
+          let some = strf "unknown action %s" in
+          let explain = Option.fold ~none:"missing action" ~some v in
+          Resp.bad_request_400 ~explain ()
 
-let bookmark_delete id r = match int_of_string id with
-| exception Failure _ ->
-    Error (Resp.v ~explain:"illegal id" Http.s400_bad_request)
-| id ->
-    let* m = Req.Allow.(meths [delete] r) in
-    match m with
-    | `DELETE ->
-        match Bookmark.get id with
-        | None -> Ok (Resp.html Http.s200_ok (Example.part []))
-        | Some id ->
-            Bookmark.delete id;
-            Ok (Resp.html Http.s200_ok (Example.part []))
+let bookmark_delete id r = match int_of_string_opt id with
+| None -> Resp.bad_request_400 ~explain:"illegal id" ()
+| Some id ->
+    let* _m = Req.Allow.(meths [delete] r) in
+    match Bookmark.get id with
+    | None -> Ok (Resp.html Http.ok_200 (Example.part []))
+    | Some id ->
+        Bookmark.delete id;
+        Ok (Resp.html Http.ok_200 (Example.part []))
 
 let serve r = match Req.path r with
 | [""] -> index r
 | ("bookmark" :: [id]) -> bookmark_delete id r
-| p -> Ok (Resp.v Http.s404_not_found)
+| p -> Resp.not_found_404 ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

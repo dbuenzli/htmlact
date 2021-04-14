@@ -1,5 +1,5 @@
 opam-version: "2.0"
-synopsis: """Connected hypertext for interactive web pages"""
+synopsis: """Hypertext connection for dynamic web pages"""
 maintainer: ["Daniel Bünzli <daniel.buenzl i@erratique.ch>"]
 authors: ["The hc programmers"]
 homepage: "https://erratique.ch/software/hc"
@@ -13,17 +13,18 @@ depends: ["ocaml" {>= "4.08.0"}
           "ocamlbuild" {build}
           "topkg" {build & >= "1.0.3"}
           "brr"
-          "webs" {with-test}
+          "webs"
           "js_of_ocaml-compiler" {>= "3.7.1"}]
 build: [["ocaml" "pkg/pkg.ml" "build" "--dev-pkg" "%{dev}%"
            "--with-webs" "%{webs:installed}%"]]
 description: """
-Hc declares interactive web pages by using HTML data attributes to
-request and seamlessly integrate HTML fragments from the server.
+Hc declares dynamic web pages by using HTML data attributes to
+seamlessly update the page with HTML fragments requested from the
+server.
 
 Using hypertext as the interaction substrate keeps logic on the server
-and, in the simplest cases, reduces front-end client code to a generic
-JavaScript driver and custom CSS animations.
+and, in the simplest cases, reduces front-end client code to custom
+CSS animations and inclusion of a generic JavaScript driver.
 
 Hc is distributed under the ISC license. Compilation of the JavaScript
 driver depends on [brr][brr].

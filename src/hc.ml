@@ -8,17 +8,6 @@ open Webs_html
 
 let strf = Printf.sprintf
 
-type dur_ms = int
-module Dur = struct
-  let notice = 100
-  let short = 250
-  let short_outro = 200
-  let medium = 500
-  let medium_outro = 400
-  let long = 1000
-  let long_outro = 750
-end
-
 let request ?meth url =
   let req = match meth with
   | None -> url
@@ -28,20 +17,44 @@ let request ?meth url =
   At.v "data-request" req
 
 let request_path ?meth p = request ?meth (Http.Path.encode p)
-let target v = At.v "data-target" v
 let query v = At.v "data-query" v
+let target v = At.v "data-target" v
+let event_src v = At.v "data-event-src" v
+
+type dur_ms = int
+
+let event ?(once = false) ?debounce_ms ?throttle_ms ?filter event =
+  let dur k = function None -> "" | Some d -> strf " %s:%dms" k d in
+  let once = if once then " once" else "" in
+  let debounce = dur "debounce" debounce_ms in
+  let throttle = dur "throttle" throttle_ms in
+  let filter = match filter with None -> "" | Some f -> " filter:" ^ f in
+  let v = String.concat "" [event; once; debounce; throttle; filter] in
+  At.v "data-event" v
 
 type effect_kind =
-[ `Inner | `Inplace | `Beforebegin | `Afterbegin | `Beforeend
-| `Afterend | `None | `Event of string ]
+[ `Element | `Children | `Beforebegin | `Afterbegin | `Beforeend | `Afterend
+| `None | `Event of string ]
 
 let effect_kind_to_string = function
-| `Inner -> "inner" | `Inplace -> "inplace"
+| `Element -> "element" | `Children -> "children"
 | `Beforebegin -> "beforebegin" | `Afterbegin -> "afterbegin"
 | `Beforeend -> "beforeend" | `Afterend -> "afterend"
 | `None -> "none" | `Event ev -> "event " ^ ev
 
 let effect k = At.v "data-effect" (effect_kind_to_string k)
+
+let feedback v = At.v "data-feedback" v
+
+module Dur = struct
+  let notice = 100
+  let short = 250
+  let short_outro = 200
+  let medium = 500
+  let medium_outro = 400
+  let long = 1000
+  let long_outro = 750
+end
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

@@ -5,24 +5,28 @@ seamlessly update the page with HTML fragments requested from the
 server.
 
 Using hypertext as the interaction substrate keeps logic on the server
-and, in the simplest cases, reduces front-end client code to an
-invocation of the {!Hc_page.init} function and custom CSS animations.
+and, in the simplest cases, reduces front-end client code to custom
+CSS animations and an invocation of the {!Hc_page.init} function.
 
 [hc] was inspired by {{:https://htmx.org/}htmx}.
 
 {1:quick_start Quick start}
 
-In your HTML,
+If you really do not want to write a single line of front-end code,
+include the page [$(opam var share)/hc/hc-page.js] in your page. Now
+the following:
 
 {v
 <script type="text/javascript" defer src="hc-page.js"></script>
-<button data-request="POST /clicked" data-effect="inplace">
-  Replace me
-</button>
+<button data-request="POST /clicked"
+        data-effect="element">Replace me</button>
 v}
 
-Instructs a click on the button to perform a POST request to
-[/clicked] and replace the button with the HTML response.
+instructs a click on the button to perform a POST request to
+[/clicked] and replace the button with the HTML response. That's it.
+
+If you installed [hc] with tests ([opam install -t hc]). The
+[hc-examples] binary serves a few interaction examples.
 
 {1:manuals Manuals}
 
@@ -56,19 +60,10 @@ Hc_page
    it's difficult to have a <sel> argument in an attribute
    beyond itself (e.g. [from:<sel>]).}
 {- Define the semantics in case of HTTP errors}
-{- Maybe for events keep event simpler, only trigger on
+{- Maybe for keep event simple, only trigger on
    request element but devise a separate DSL to declare custom
    events and fan-in from other events. Or even, let that
    to separate JavaScript fiddling.}
 {- Consider [data-response-sel] to apply on the response.}
-{- Try to get rid of [delay] in [data-effect]. It would be nice is to
-   avoid the CSS/code duration dupe.
-   Fiddling with transitionend animationend event seems brittle.
-    It's
-   a bit annoying because animations may be on descendents of
-   [hc-out] and [hc-out-parent]. One approach could be to apply
-   the classes and then find the max of [animation-duration],
-   [transition-duration] via getComputedStyle. The client then
-   needs to specify [animation-duration] even if it's not the element
-   animating.
-   }}
+{- Provide request counters and discard if older reponse or not latest.}
+{- Provide default filters that easily} }

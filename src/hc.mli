@@ -12,9 +12,50 @@
 open Webs
 open Webs_html
 
-(** {1:dur Durations} *)
+(** {1:atts Attributes} *)
+
+val request : ?meth:[< Http.meth | `Sse] -> string -> At.t
+(** [request ~meth r] is a {{!page-manual.data_request}[data-request]}
+    attribute for URL [r] using method [meth] (defaults to [`GET]). *)
+
+val request_path : ?meth:[< Http.meth | `Sse] -> Http.path -> At.t
+(** [request ~meth p] is a {{!page-manual.data_request}[data-request]}
+    attribute for URL [p] using method [meth] (defaults to [`GET]). *)
+
+val query : string -> At.t
+(** [query sel] is the {{!page-manual.data_target}[data-query]} attribute
+    [sel]. *)
+
+val event_src : string -> At.t
+(** [event_src sel] is the {{!page-manual.data_event_src}[data-event-src]}
+    attribute [sel]. *)
 
 type dur_ms = int
+(** The type for millisecond durations. *)
+
+val event : ?once:bool -> ?debounce_ms:dur_ms -> ?throttle_ms:dur_ms ->
+  ?filter:string -> string -> At.t
+(** [event ()] is the {{!page-manual.data_event}data-event} attribute
+    [ev]. *)
+
+val target : string -> At.t
+(** [target sel] is the {{!page-manual.data_target}[data-target]} attribute
+    [sel]. *)
+
+type effect_kind =
+[ `Element | `Children | `Beforebegin | `Afterbegin | `Beforeend | `Afterend
+| `None | `Event of string ]
+(** The type for kind of {{!page-manual.data_effect}request effects}. *)
+
+val effect : effect_kind -> At.t
+(** [effect e] is the {{!page-manual.data_effect}[data-effect]} attribute
+    [e]. *)
+
+val feedback : string -> At.t
+(** [feedback sel] is the {{!page-manual.data_feedback}[data-feedback]}
+    attribute [sel]. *)
+
+(** {1:dur Durations} *)
 
 (** Named durations.
 
@@ -56,20 +97,6 @@ module Dur : sig
   val long_outro : dur_ms
   (** [long_outro] is [750ms]. *)
 end
-
-(** {1:atts Attributes} *)
-
-val request : ?meth:[< Http.meth | `Sse] -> string -> At.t
-val request_path : ?meth:[< Http.meth | `Sse] -> Http.path -> At.t
-val target : string -> At.t
-val query : string -> At.t
-
-type effect_kind =
-[ `Inner | `Inplace | `Beforebegin | `Afterbegin | `Beforeend
-| `Afterend | `None | `Event of string ]
-
-val effect : effect_kind -> At.t
-
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

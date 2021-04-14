@@ -1,5 +1,5 @@
-Hc — Connected hypertext for dynamic web pages
-==============================================
+Hc — Hypertext connection for dynamic web pages
+===============================================
 %%VERSION%%
 
 Hc declares dynamic web pages by using HTML data attributes to
@@ -7,8 +7,8 @@ seamlessly update the page with HTML fragments requested from the
 server.
 
 Using hypertext as the interaction substrate keeps logic on the server
-and, in the simplest cases, reduces front-end client code to a generic
-JavaScript driver and custom CSS animations.
+and, in the simplest cases, reduces front-end client code to custom
+CSS animations and inclusion of a generic JavaScript driver.
 
 Hc is distributed under the ISC license. Compilation of the JavaScript
 driver depends on [brr][brr].
