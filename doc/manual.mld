@@ -307,6 +307,10 @@ Redirects the page to [<url>]. The body of the response is ignored by [Hc].
 
 Reloads the page. The body of the response is igored by [Hc].
 
+{2:header_push_history [hc-push-history: <url>]}
+
+Pushes [<url>] on the history stack.
+
 {1:request Request HTTP headers}
 
 {2:header_hc [hc: true]}

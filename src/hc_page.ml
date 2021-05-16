@@ -454,6 +454,7 @@ end
 module Header = struct
   let redirect = Jstr.v "hc-redirect"
   let reload = Jstr.v "hc-reload"
+  let push_history = Jstr.v "hc-push-history"
 
   let header_error h msg = Jstr.(v "header " + h + v ": " + msg)
 
@@ -480,7 +481,18 @@ module Header = struct
             if Jstr.equal (Jstr.v "false") bv then Ok () else
             error (header_error reload Jstr.(v ": invalid value: " + bv))
 
+  let response_push_history ~requestel feedback hs =
+    match Fetch.Headers.find push_history hs with
+    | None -> Ok ()
+    | Some url ->
+        let h = Window.history G.window in
+        let base = Uri.to_jstr (Window.location G.window) in
+        match Uri.of_jstr ~base url with
+        | Error e -> reword_error (header_error push_history) e
+        | Ok uri -> Ok (Window.History.push_state ~uri h)
+
   let handle_response ~requestel feedback hs =
+    let* () = response_push_history ~requestel feedback hs in
     let* () = response_redirect ~requestel feedback hs in
     let* () = response_reload ~requestel feedback hs in
     Ok ()
