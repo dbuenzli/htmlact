@@ -426,6 +426,7 @@ module Effect = struct
       let t = Jstr.trim t in
       if Jstr.(equal t (v "element")) then Element, ts else
       if Jstr.(equal t (v "children")) then Children, ts else
+      if Jstr.(equal t (v "none")) then None', ts else
       if Jstr.(equal t (v "event")) then match ts with
       | e :: ts -> Event e, ts | _ -> Parse.error (Jstr.v "missing event name")
       else
