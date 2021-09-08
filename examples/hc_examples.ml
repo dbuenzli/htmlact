@@ -62,7 +62,7 @@ let service file_root r =
       let* file = Req.to_absolute_filepath ~root:file_root r in
       Webs_unix.send_file r file
   | [""] ->
-      let* _m = Req.Allow.(meths [get] r) in
+      let* `GET = Req.Allow.(meths [get] r) in
       Ok (Resp.html Http.ok_200 index_page)
   | _ ->
       serve_examples r

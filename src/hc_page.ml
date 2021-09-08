@@ -452,6 +452,7 @@ end
 (* Headers *)
 
 module Header = struct
+  let hc = Jstr.v "hc"
   let redirect = Jstr.v "hc-redirect"
   let reload = Jstr.v "hc-reload"
   let push_history = Jstr.v "hc-push-history"
@@ -552,6 +553,8 @@ module Request = struct
     if Jstr.equal (Uri.scheme u) nobase_scheme
     then Uri.path u else Uri.to_jstr u
 
+  let headers = Fetch.Headers.of_assoc [Header.hc, Jstr.v "true"]
+
   let to_fetch_request url meth query =
     match Jstr.(equal meth (v "GET") || equal meth (v "HEAD")) with
     | true ->
@@ -559,7 +562,8 @@ module Request = struct
         let q = Uri.Params.to_jstr (Form.Data.to_uri_params query) in
         let url = if Jstr.is_empty q then url else Jstr.(url + v "?" + q) in
         let redirect = Fetch.Request.Redirect.follow in
-        let init = Fetch.Request.init ~redirect ~method':meth () in
+        let method' = meth in
+        let init = Fetch.Request.init ~headers ~redirect ~method' () in
         Fetch.Request.v ~init url
     | false ->
         let url = real_url url in
@@ -568,7 +572,8 @@ module Request = struct
         | false -> Fetch.Body.of_uri_params (Form.Data.to_uri_params query)
         in
         let redirect = Fetch.Request.Redirect.follow in
-        let init = Fetch.Request.init ~redirect ~method':meth ~body () in
+        let method' = meth in
+        let init = Fetch.Request.init ~headers ~redirect ~method' ~body () in
         Fetch.Request.v ~init url
 end
 
