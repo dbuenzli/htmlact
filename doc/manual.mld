@@ -307,9 +307,20 @@ Redirects the page to [<url>]. The body of the response is ignored by [Hc].
 
 Reloads the page. The body of the response is igored by [Hc].
 
-{2:header_push_history [hc-push-history: <url>]}
+{2:header_location_push [hc-location-push: <url>]}
 
-Pushes [<url>] on the history stack.
+Pushes location [<url>] on the history stack.
+
+{2:header_location_replace [hc-location-replace: <url>]}
+
+Replaces current location by [<url>] (without reloading). Has no effect
+if {{!header_location_push}[hc-location-push]} is present.
+
+{2:header_location_title [hc-location-title: <pct-title>]}
+
+Replaces the current title by percent encoded title [<pct-title>].
+Mostly used in conjunction with {{!header_location_push}[hc-location-push]}
+or {{!header_location_replace}[hc-location-replace]}.
 
 {1:request Request HTTP headers}
 
