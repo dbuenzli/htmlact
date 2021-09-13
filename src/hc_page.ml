@@ -491,7 +491,11 @@ module Header = struct
         let base = Uri.to_jstr (Window.location G.window) in
         match Uri.of_jstr ~base url with
         | Error e -> reword_error (header_error push_history) e
-        | Ok uri -> Ok (Window.History.push_state ~uri h)
+        | Ok uri ->
+            let uri_str = Uri.to_jstr uri in
+            if Jstr.equal uri_str base
+            then Ok () (* no need to pollute history with nops *)
+            else Ok (Window.History.push_state ~uri h)
 
   let handle_response ~requestel feedback hs =
     let* () = response_push_history ~requestel feedback hs in
