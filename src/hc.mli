@@ -3,11 +3,12 @@
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
-(** Hc HTML generation using {!Ht}.
+(** Hc HTML generation and HTTP headers for {!Webs}.
 
-    These function help generate {{:page-manual.attref}Hc data attributes}
-    with {!Ht}. Ignore if you are using something else to generate
-    your HTML. *)
+    These function help generate Hc {{!page-manual.attref}data
+    attributes} and {{!page-manual.responses}HTTP headers} with
+    {!Webs} and {!Webs_html}. Ignore if you are using something else
+    to generate your HTML. *)
 
 open Webs
 open Webs_html
@@ -97,6 +98,34 @@ module Dur : sig
   val long_outro : dur_ms
   (** [long_outro] is [750ms]. *)
 end
+
+(** {1:headers HTTP headers} *)
+
+(** {2:requests Requests} *)
+
+val hc : Webs.Http.name
+(** [hc] is the [hc] header. *)
+
+(** {2:responses Responses} *)
+
+val redirect : Webs.Http.name
+(** [redirect] is the [hc-redirect] header. *)
+
+val reload : Webs.Http.name
+(** [reload] is the [hc-reload] header. *)
+
+val location_push : Webs.Http.name
+(** [location_push] is the [hc-location-push] header. *)
+
+val location_replace : Webs.Http.name
+(** [location_replace] is the [hc-location-replace] header. *)
+
+val location_title : Webs.Http.name
+(** [location_title] is the [hc-location-title] header. *)
+
+val encode_location_title : string -> string
+(** [encode_locationt_title s] encodes [s] for the {!location_title}
+    headers. *)
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

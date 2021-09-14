@@ -43,8 +43,9 @@ let effect_kind_to_string = function
 | `None -> "none" | `Event ev -> "event " ^ ev
 
 let effect k = At.v "data-effect" (effect_kind_to_string k)
-
 let feedback v = At.v "data-feedback" v
+
+(* Durations. *)
 
 module Dur = struct
   let notice = 100
@@ -55,6 +56,16 @@ module Dur = struct
   let long = 1000
   let long_outro = 750
 end
+
+(* Headers *)
+
+let hc = Http.Name.v "hc"
+let redirect = Http.Name.v "hc-redirect"
+let reload = Http.Name.v "hc-reload"
+let location_push = Http.Name.v "hc-location-push"
+let location_replace = Http.Name.v "hc-location-replace"
+let location_title = Http.Name.v "hc-location-title"
+let encode_location_title = Http.Pct.encode
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers
