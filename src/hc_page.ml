@@ -485,23 +485,19 @@ module Header = struct
             if Jstr.equal (Jstr.v "false") bv then Ok () else
             error (header_error reload Jstr.(v ": invalid value: " + bv))
 
-  let find_response_location_title hs =
+  let response_location_title ~requestel feedback hs =
     match Fetch.Headers.find location_title hs with
-    | None -> Ok None
-    | Some t ->
-        match Uri.decode t (* pct-decode *) with
-        | Error e -> reword_error (header_error location_title) e
-        | Ok title -> Ok (Some title)
-
-  let reponse_location_title ~requestel feedback hs =
-    let* title = find_response_location_title hs in
-    match title with
     | None -> Ok ()
-    | Some title ->
-        let h = Window.history G.window in
-        Ok (Window.History.replace_state ~title h)
+    | Some title' ->
+        let* title' = match Uri.decode title' (* pct-decode *) with
+        | Error e -> reword_error (header_error location_title) e
+        | Ok _ as v -> v
+        in
+        let title = Document.title G.document in
+        if Jstr.equal title title' then Ok () else
+        Ok (Document.set_title G.document title')
 
-  let response_location header history_action ~requestel feedback hs =
+  let response_location header action ~requestel feedback hs =
     match Fetch.Headers.find header hs with
     | None -> Ok false
     | Some url ->
@@ -510,11 +506,10 @@ module Header = struct
         match Uri.of_jstr ~base url with
         | Error e -> reword_error (header_error header) e
         | Ok uri ->
-            let* title = find_response_location_title hs in
             let uri_str = Uri.to_jstr uri in
             if Jstr.equal uri_str base
             then Ok false
-            else Ok (history_action ?state:None ?title ?uri:(Some uri) h; true)
+            else Ok (action ?state:None ?title:None ?uri:(Some uri) h; true)
 
   let response_location_replace ~requestel feedback hs =
     response_location location_replace Window.History.replace_state ~requestel
@@ -526,14 +521,11 @@ module Header = struct
 
   let handle_response ~requestel feedback hs =
     let* did_push = response_location_push ~requestel feedback hs in
-    let* did_replace =
+    let* _did_rep =
       if did_push then Ok false else
       response_location_replace ~requestel feedback hs
     in
-    let* () =
-      if did_replace || did_push then Ok () else
-      reponse_location_title ~requestel feedback hs
-    in
+    let* () = response_location_title ~requestel feedback hs in
     let* () = response_redirect ~requestel feedback hs in
     let* () = response_reload ~requestel feedback hs in
     Ok ()
