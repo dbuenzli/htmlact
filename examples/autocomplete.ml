@@ -51,15 +51,20 @@ let bookmark_name_input urlf =
     let t = Hc.target (":up #" ^ list_id) and f = Hc.feedback ":up .spinner" in
     let e = Hc.event ~debounce_ms:500 "input" in
     let at =
-      At.[ class' "field"; name "title"; type' "text"; int "size" 25;
-           v "list" list_id; autocomplete "off"; autofocus ]
+      At.[ class' "field"; name "title"; type' "search"; int "size" 25;
+           v "list" list_id; autocomplete "off"; autofocus;
+           At.true' "incremental" ]
     in
     El.input ~at:(r :: t :: e :: f :: at) ()
   in
-  [ El.label [El.txt "Bookmark name"];
+  let label = El.label [El.txt "Bookmark name"] in
+  [ label;
     El.span ~at:At.[class' "spinner"] [El.txt "…"];
     El.br ();
-    input; El.datalist ~at:At.[id list_id] [] ]
+    (* The form here prevents Safari of trying to complete non-sense.
+       It seems it pick-up the name from Bookmark name and tries to complete
+       from the address book !? *)
+    El.form [input; El.datalist ~at:At.[id list_id] []]]
 
 let bookmark_name r =
   let* m = Req.Allow.(meths [get; post] r) in

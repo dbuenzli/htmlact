@@ -45,7 +45,9 @@ Hc_page
 {ul
 {- Provide and trigger events for [Hc] behaviour itself, this
    allows to chain [Hc] connections in interesting ways and
-   helps coordinating with other front end code}
+   helps coordinating with other front end code.
+   {b Update.} Something was hastily added in {!Hc.Ev}.
+   needs proper design and documentation.}
 {- Because of resource costs we likely want something like
    multi-target response updates for SSE and websockets. Also
    useful for deletion examples (or should we enrich effect ?)}

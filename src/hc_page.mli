@@ -10,6 +10,24 @@
 val init : unit -> unit
 (** [init ()] installs [hc] on the page. *)
 
+(** {1:events Events} *)
+
+(** Hc connection cycle events.
+
+    {b FIXME.} Expand on that. Also end with error attribute
+    would likely be nicer. Ensures start/end comes in pair. *)
+module Ev : sig
+
+  val cycle_start : unit Brr.Ev.type'
+  (** [cycle_start] is sent on {!G.document} when a connection cycle start. *)
+
+  val cycle_end : unit Brr.Ev.type'
+  (** [cycle_end] is sent on {!G.document} when a connection cycle ends. *)
+
+  val cycle_error : unit Brr.Ev.type'
+  (** [cycle_end] is sent on {!G.document} when a connection cycle errors. *)
+end
+
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers
 

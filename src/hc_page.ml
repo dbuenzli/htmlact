@@ -20,6 +20,14 @@ module Intersection_observer = struct
   let observe o el = ignore @@ Jv.call o "observe" [| El.to_jv el |]
 end
 
+let ev_cycle_start = Ev.Type.create (Jstr.v "hc-cycle-start")
+let ev_cycle_end = Ev.Type.create (Jstr.v "hc-cycle-end")
+let ev_cycle_error = Ev.Type.create (Jstr.v "hc-cycle-error")
+
+let send_cycle_ev ev =
+  (* FIXME maybe we coud honour the Js cancellation stuff. *)
+  ignore (Ev.dispatch (Ev.create ev) (Document.as_target G.document))
+
 (* Error management
 
    TODO trigger error event and allow to disable logging *)
@@ -28,7 +36,10 @@ let ( let* ) r f = match r with Ok v -> f v | Error _ as e -> e
 let error str = Error (Jv.Error.v str)
 let reword_error f e = error (f (Jv.Error.message e))
 let el_log_if_error el = function
-| Ok v -> v | Error e -> Console.(error [str "hc: element "; el; e ])
+| Ok v -> v
+| Error e ->
+    send_cycle_ev ev_cycle_error;
+    Console.(error [str "hc: element "; el; e ])
 
 (* Attributes, classes and headers *)
 
@@ -276,7 +287,7 @@ module Target = struct
   | None -> Ok el
   | Some sel ->
       match Sel.find_first ~start:el (Sel.of_jstr sel) with
-      | None -> error Jstr.(sel + v " no such target")
+      | None -> error Jstr.(v "\"" + sel + v "\" no such target")
       | Some el -> Ok el
 end
 
@@ -628,6 +639,7 @@ let http_request requestel meth url query target effect feedback =
           | Ok html ->
               Feedback.end_request ~requestel feedback;
               let* () = Effect.apply ~target effect html in
+              send_cycle_ev ev_cycle_end;
               Fut.ok ()
   in
   Fut.await resp (el_log_if_error requestel);
@@ -644,6 +656,7 @@ let prevent_some_default ev = (* TODO unconditional ? *)
   if Jstr.(equal n (v "submit")) then Ev.prevent_default ev else ()
 
 let do_request ev =
+  send_cycle_ev ev_cycle_start;
   prevent_some_default ev;
   let el = El.of_jv @@ Ev.target_to_jv (Ev.target ev) in
   el_log_if_error el @@
@@ -690,6 +703,12 @@ let install_observer () = (* Observe DOM additions and removals *)
 let init () =
   Event.connect_descendents do_request (Document.root G.document);
   install_observer ()
+
+module Ev = struct
+  let cycle_start = ev_cycle_start
+  let cycle_end = ev_cycle_end
+  let cycle_error = ev_cycle_error
+end
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers
