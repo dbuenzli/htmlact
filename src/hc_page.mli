@@ -28,6 +28,17 @@ module Ev : sig
   (** [cycle_end] is sent on {!G.document} when a connection cycle errors. *)
 end
 
+(**/**)
+
+
+module Effect : sig
+
+  type kind = Element | Children | Insert of Jstr.t | None' | Event of Jstr.t
+  val feedback_remove : target:Brr.El.t -> kind -> unit Fut.t
+end
+
+(**/**)
+
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers
 

@@ -68,4 +68,7 @@ Hc_page
    to separate JavaScript fiddling.}
 {- Consider [data-response-sel] to apply on the response.}
 {- Provide request counters and discard if older reponse or not latest.}
-{- Provide default filters that easily} }
+{- Provide default filters that easily}
+{- We likely want to expose the dom effecting stuff (for now
+   exposed hastily for hyperbib and undocumented), make a nice
+   api and let [hc] use it.}}
