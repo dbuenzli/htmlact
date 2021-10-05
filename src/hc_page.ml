@@ -23,6 +23,7 @@ end
 let ev_cycle_start = Ev.Type.create (Jstr.v "hc-cycle-start")
 let ev_cycle_end = Ev.Type.create (Jstr.v "hc-cycle-end")
 let ev_cycle_error = Ev.Type.create (Jstr.v "hc-cycle-error")
+let ev_hc_in = Ev.Type.create (Jstr.v "hc-in")
 
 let send_cycle_ev ev =
   (* FIXME maybe we coud honour the Js cancellation stuff. *)
@@ -368,11 +369,13 @@ module Effect = struct
         Fut.return ()
 
   let feedback_insert ~parent ~inserts =
-    Feedback.insert ~parent ~inserts true;
-    (* Make sure we had a render of [true]. *)
-    ignore (G.request_animation_frame @@ fun _ ->
-    ignore (G.request_animation_frame @@ fun _ ->
-            Feedback.insert ~parent ~inserts false))
+    if (Ev.dispatch (Ev.create ev_hc_in) (El.as_target parent)) then begin
+      Feedback.insert ~parent ~inserts true;
+      (* Make sure we had a render of [true]. *)
+      ignore (G.request_animation_frame @@ fun _ ->
+      ignore (G.request_animation_frame @@ fun _ ->
+              Feedback.insert ~parent ~inserts false))
+    end
 
   let apply_element ~target html_part =
     let parent = El.parent target |> Option.get in
@@ -708,6 +711,7 @@ module Ev = struct
   let cycle_start = ev_cycle_start
   let cycle_end = ev_cycle_end
   let cycle_error = ev_cycle_error
+  let hc_in = ev_hc_in
 end
 
 (*---------------------------------------------------------------------------

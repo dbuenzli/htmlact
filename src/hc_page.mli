@@ -14,6 +14,8 @@ val init : unit -> unit
 
 (** Hc connection cycle events.
 
+    {b FIXME.} Document in the manual.
+
     {b FIXME.} Expand on that. Also end with error attribute
     would likely be nicer. Ensures start/end comes in pair. *)
 module Ev : sig
@@ -26,17 +28,24 @@ module Ev : sig
 
   val cycle_error : unit Brr.Ev.type'
   (** [cycle_end] is sent on {!G.document} when a connection cycle errors. *)
+
+  val hc_in : unit Brr.Ev.type'
+  (** [hc_in] is sent on the element that gets classifed by
+      {{!page-manual.hc_in}[hc-in-parent]}, just before they
+      get classified. This is the parent element of what gets
+      newly inserted in the DOM. {!Ev.prevent_default} is called on
+      the event, the classification dance does not occur.
+
+      {b FIXME.} Wouldn't it be better to expose MutationObserver
+      hooks ?  *)
 end
 
 (**/**)
 
-
 module Effect : sig
-
   type kind = Element | Children | Insert of Jstr.t | None' | Event of Jstr.t
   val feedback_remove : target:Brr.El.t -> kind -> unit Fut.t
 end
-
 (**/**)
 
 (*---------------------------------------------------------------------------
