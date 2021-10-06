@@ -226,16 +226,20 @@ module Event = struct
       in
       Ok { name; once = false; debounce_ms = 0; throttle_ms = 0; filter = None }
 
-
   let filter ev e = match ev.filter with
   | None -> true
   | Some f -> Jv.to_bool (Jv.apply (Jv.get' Jv.global f) [| Ev.to_jv e |])
+
+  let prevent_some_default ev = (* TODO unconditional ? *)
+    let n = Ev.Type.name (Ev.type' ev) in
+    if Jstr.(equal n (v "submit")) then Ev.prevent_default ev else ()
 
   let once ev el cb =
     let open Fut.Syntax in
     let etype = Ev.Type.create ev.name in
     let target = El.as_target el in
     let* e = Ev.next etype target in
+    prevent_some_default e;
     if not (filter ev e) then Fut.return () else
     if ev.debounce_ms <= 0 then Fut.return (cb e) else
     let* () = Fut.tick ~ms:ev.debounce_ms in
@@ -244,6 +248,7 @@ module Event = struct
   let debounce ev cb =
     let tid = ref 0 in
     fun e ->
+      prevent_some_default e;
       if not (filter ev e) then () else
       (G.stop_timer !tid;
        tid := G.set_timeout ~ms:ev.debounce_ms (fun () -> cb e))
@@ -251,6 +256,7 @@ module Event = struct
   let throttle ev cb =
     let suppress = ref false in
     fun e ->
+      prevent_some_default e;
       if not (filter ev e) then () else
       if !suppress then () else
       (cb e; suppress := true;
@@ -262,7 +268,9 @@ module Event = struct
     let cb =
       if ev.debounce_ms <> 0 then debounce ev cb else
       if ev.throttle_ms <> 0 then throttle ev cb else
-      fun e -> if filter ev e then cb e else ()
+      fun e ->
+        prevent_some_default e;
+        if filter ev e then cb e else ()
     in
     Ok (Ev.listen etype cb target)
 
@@ -654,13 +662,8 @@ let sse_request el url query target effect feedback =
 let websocket_request el url query target effect feedback =
   error (Jstr.v "Websockets unimplemented")
 
-let prevent_some_default ev = (* TODO unconditional ? *)
-  let n = Ev.Type.name (Ev.type' ev) in
-  if Jstr.(equal n (v "submit")) then Ev.prevent_default ev else ()
-
 let do_request ev =
   send_cycle_ev ev_cycle_start;
-  prevent_some_default ev;
   let el = El.of_jv @@ Ev.target_to_jv (Ev.target ev) in
   el_log_if_error el @@
   match El.at At.request el with
