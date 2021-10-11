@@ -476,11 +476,26 @@ end
 
 module Header = struct
   let hc = Jstr.v "hc"
+  let hc_referer = Jstr.v "hc-referer"
   let redirect = Jstr.v "hc-redirect"
   let reload = Jstr.v "hc-reload"
   let location_push = Jstr.v "hc-location-push"
   let location_replace = Jstr.v "hc-location-replace"
   let location_title = Jstr.v "hc-location-title"
+
+  let referer_value () =
+    let ref = Window.location G.window in
+    let ref = match Jstr.is_empty (Uri.fragment ref) with
+    | true -> ref
+    | false ->
+        Console.log_if_error ~use:ref
+          (Uri.with_uri ~fragment:Jstr.empty ref)
+    in
+    Uri.to_jstr ref
+
+  let request () =
+    Fetch.Headers.of_assoc
+      [hc, Jstr.v "true"; hc_referer, referer_value ()]
 
   let header_error h msg = Jstr.(v "header " + h + v ": " + msg)
 
@@ -607,11 +622,10 @@ module Request = struct
     if Jstr.equal (Uri.scheme u) nobase_scheme
     then Uri.path u else Uri.to_jstr u
 
-  let headers = Fetch.Headers.of_assoc [Header.hc, Jstr.v "true"]
-
   let to_fetch_request url meth query =
     match Jstr.(equal meth (v "GET") || equal meth (v "HEAD")) with
     | true ->
+        let headers = Header.request () in
         let url = real_url url in
         let q = Uri.Params.to_jstr (Form.Data.to_uri_params query) in
         let url = if Jstr.is_empty q then url else Jstr.(url + v "?" + q) in
@@ -620,6 +634,7 @@ module Request = struct
         let init = Fetch.Request.init ~headers ~redirect ~method' () in
         Fetch.Request.v ~init url
     | false ->
+        let headers = Header.request () in
         let url = real_url url in
         let body = match Form.Data.has_file_entry query with
         | true -> Fetch.Body.of_form_data query

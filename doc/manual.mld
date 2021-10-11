@@ -327,3 +327,8 @@ or {{!header_location_replace}[hc-location-replace]}.
 {2:header_hc [hc: true]}
 
 Indicates the request is made by [Hc].
+
+{2:header_hc_referer [hc-referer: <absolute-URI>]}
+
+Indicates the URL of the page performing the request. This is the
+window location without the fragment.

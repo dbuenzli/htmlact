@@ -60,6 +60,7 @@ end
 (* Headers *)
 
 let hc = Http.Name.v "hc"
+let hc_referer = Http.Name.v "hc-referer"
 let redirect = Http.Name.v "hc-redirect"
 let reload = Http.Name.v "hc-reload"
 let location_push = Http.Name.v "hc-location-push"
