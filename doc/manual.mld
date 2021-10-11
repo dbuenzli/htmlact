@@ -63,7 +63,7 @@ Every request element on the page cycle through the following steps.
 {- Wait for the response. If an error occurs classify
    the request and feedback elements with [hc-error] and stop here.
    Otherwise unclassify [hc-request] and proceed. }
-{- Process any {{!responses}special header} in the response. This
+{- Process any {{!response_headers}special header} in the response. This
    may stop the cycle here (e.g. on {{!header_reload}reload} or
    {{!header_redirect}redirect}).}
 {- Using the HTML fragment found in the server response, perform the
@@ -293,7 +293,7 @@ grammar is described as follows:
 css-selector = …   # See the CSS specification
 v}
 
-{1:responses Response HTTP headers}
+{1:response_headers Response HTTP headers}
 
 The server should respond with an HTML fragment to be inserted with
 respect to the {{!data_target}request target}. Additionally it can use
@@ -322,13 +322,23 @@ Replaces the current title by percent encoded title [<pct-title>].
 Mostly used in conjunction with {{!header_location_push}[hc-location-push]}
 or {{!header_location_replace}[hc-location-replace]}.
 
-{1:request Request HTTP headers}
+{1:request_headers Request HTTP headers}
 
 {2:header_hc [hc: true]}
 
 Indicates the request is made by [Hc].
 
-{2:header_hc_referer [hc-referer: <absolute-URI>]}
+{2:header_referer [referer: <url>]}
 
-Indicates the URL of the page performing the request. This is the
-window location without the fragment.
+This is the standard HTTP [referer] header, it indicates the URL of
+the page (without the fragment) that performs the request. [hc] makes
+requests with the
+{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#directives}
+[same-origin]} policy.
+
+If your HTML fragment returns relative URLs they will be interpreted
+relative to [<url>] once they are injected in the DOM.
+
+
+{b FIXME.} We should likely make that or at least the policy,
+tweakable in some way.

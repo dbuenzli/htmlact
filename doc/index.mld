@@ -74,4 +74,9 @@ Hc_page
    Provide local substitution.}
 {- We likely want to expose the dom effecting stuff (for now
    exposed hastily for hyperbib and undocumented), make a nice
-   api and let [hc] use it.}}
+   api and let [hc] use it.}
+{- Allow to tweak the
+   {{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy}
+    [Referrer-Policy]} for requests. For now we use [same-origin]. Possibly
+   allow to set [referer].}
+{- Support for header specification ?}}

@@ -106,31 +106,27 @@ end
 val hc : Webs.Http.name
 (** [hc] is the {{!page-manual.header_hc}[hc]} header. *)
 
-val hc_referer : Webs.Http.name
-(** [hc_referer] is the {{!page-manual.header_hc_referer}[hc-referer]}
-    header. *)
-
 (** {2:responses Responses} *)
 
 val redirect : Webs.Http.name
-(** [redirect] is the {{!page-manual.header_hc_redirect}[hc-redirect]}
+(** [redirect] is the {{!page-manual.header_redirect}[hc-redirect]}
     header. *)
 
 val reload : Webs.Http.name
-(** [reload] is the {{!page-manual.header_hc_reload}[hc-reload]} header. *)
+(** [reload] is the {{!page-manual.header_reload}[hc-reload]} header. *)
 
 val location_push : Webs.Http.name
-(** [location_push] is the {{!page-manual.header_hc_location_push}
+(** [location_push] is the {{!page-manual.header_location_push}
     [hc-location-push]} header. *)
 
 val location_replace : Webs.Http.name
 (** [location_replace] is the
-    {{!page-manual.header_hc_location_replace}[hc-location-replace]}
+    {{!page-manual.header_location_replace}[hc-location-replace]}
     header. *)
 
 val location_title : Webs.Http.name
 (** [location_title] is the
-    {{!page-manual.header_hc_location_title}[hc-location-title]} header. *)
+    {{!page-manual.header_location_title}[hc-location-title]} header. *)
 
 val encode_location_title : string -> string
 (** [encode_locationt_title s] encodes [s] for the {!location_title}

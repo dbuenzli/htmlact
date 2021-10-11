@@ -31,7 +31,7 @@ module Ev : sig
 
   val hc_in : unit Brr.Ev.type'
   (** [hc_in] is sent on the element that gets classifed by
-      {{!page-manual.hc_in}[hc-in-parent]}, just before they
+      {{!page-manual.class_hc_in_parent}[hc-in-parent]}, just before they
       get classified. This is the parent element of what gets
       newly inserted in the DOM. {!Ev.prevent_default} is called on
       the event, the classification dance does not occur.
