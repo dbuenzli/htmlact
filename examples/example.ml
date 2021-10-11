@@ -30,7 +30,7 @@ let page ?style:st ~id ~title content =
   in
   let body = El.body [ El.h1 h1; El.splice content] in
   let more_head =
-    let el_style s = El.style [El.raw s] in
+    let el_style s = El.style [El.unsafe_raw s] in
     let more_style = match st with None -> El.void | Some t -> el_style t in
     El.splice [ el_style style; more_style ]
   in
