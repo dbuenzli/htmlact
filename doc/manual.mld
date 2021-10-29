@@ -190,6 +190,18 @@ otherwise in the request body encoded with
 [application/x-www-form-urlencoded] unless there is a file input in
 which case [multipart/form-data] is used.
 
+{2:data_query_rescue [data-query-rescue="<bool>"]}
+
+Use this to prevent users from leaving a page without performing the
+request if the query data changed.
+
+If [true], the values determined by {{!data_query}[data-query]} are
+snapshot on DOM insertion. If they still exist and they changed when
+the
+{{:https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event}
+[beforeunload]} window event triggers the browser specific "leave page
+confirmation" modal is triggered.
+
 {2:data_event [data-event="<ev> <mod>*"]}
 
 [<ev>] is the name of the JavaScript event of the

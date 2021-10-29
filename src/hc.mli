@@ -27,6 +27,10 @@ val query : string -> At.t
 (** [query sel] is the {{!page-manual.data_target}[data-query]} attribute
     [sel]. *)
 
+val query_rescue : bool -> At.t
+(** [query_rescue b]is the {{!page-manual.query_rescue}[data-query-rescue]}
+    attribute [b]. *)
+
 val event_src : string -> At.t
 (** [event_src sel] is the {{!page-manual.data_event_src}[data-event-src]}
     attribute [sel]. *)

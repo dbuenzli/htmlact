@@ -18,6 +18,7 @@ let request ?meth url =
 
 let request_path ?meth p = request ?meth (Http.Path.encode p)
 let query v = At.v "data-query" v
+let query_rescue b = At.v "data-query-rescue" (string_of_bool b)
 let target v = At.v "data-target" v
 let event_src v = At.v "data-event-src" v
 

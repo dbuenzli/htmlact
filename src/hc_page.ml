@@ -46,6 +46,7 @@ let el_log_if_error el = function
 
 module At = struct
   let query = Jstr.v "data-query"
+  let query_rescue = Jstr.v "data-query-rescue"
   let event = Jstr.v "data-event"
   let event_src = Jstr.v "data-event-src"
   let target = Jstr.v "data-target"
@@ -166,6 +167,69 @@ module Dur_ms = struct
   | Some dur -> dur
 end
 
+(* Query *)
+
+module Query = struct
+  let append_form_data fd0 fd1 =
+    if Form.Data.is_empty fd0 then (* avoid append dance *) fd1 else
+    let append_entry k v fd = match v with
+    | `String v -> Form.Data.append fd k v; fd
+    | `File f -> Form.Data.append_blob fd k (File.as_blob f); fd
+    in
+    Form.Data.fold append_entry fd1 fd0
+
+  let append_el_query_data el fd =
+    match Jstr.(equal (El.tag_name el) (Jstr.v "form")) with
+    | true -> append_form_data fd (Form.Data.of_form (Form.of_el el))
+    | false ->
+        let v = El.prop El.Prop.value el in
+        if Jstr.is_empty v then fd else
+        let n = El.prop El.Prop.name el in
+        let n = if Jstr.is_empty n then Jstr.v "value" else n in
+        Form.Data.append fd n v; fd
+
+  let of_el ?url el =
+    let fd = match url with
+    | None -> Form.Data.create ()
+    | Some url ->
+        let ps = Uri.Params.of_jstr (Uri.query url) in
+        Form.Data.of_uri_params ps
+    in
+    match El.at At.query el with
+    | None -> append_el_query_data el fd
+    | Some sel ->
+        let sel = Sel.of_jstr sel in
+        Sel.fold_find ~start:el sel append_el_query_data fd
+
+  (* Rescue *)
+
+  let hc_rescue_stamp = Jstr.v "data-hc-rescue-stamp"
+  let hc_rescue_stamp_prop = El.Prop.jstr hc_rescue_stamp
+
+  let rescue_stamp el =
+    Uri.Params.to_jstr (Brr_io.Form.Data.to_uri_params (of_el el))
+
+  let stamp_if_needed el = match El.at At.query_rescue el with
+  | None -> ()
+  | Some rescue ->
+      if not (Jstr.equal (Jstr.v "true") rescue) then () else
+      El.set_prop hc_rescue_stamp_prop (rescue_stamp el) el
+
+  let stamp_changed el =
+    not (Jstr.equal (rescue_stamp el) (El.prop hc_rescue_stamp_prop el))
+
+  let rescue_on_beforeunload ev =
+    let check_els = Jstr.(v "[" + At.query_rescue + v "='true']") in
+    let check el rescue = rescue || stamp_changed el in
+    let rescue = El.fold_find_by_selector check check_els false in
+    if not rescue then () else
+    begin
+      Ev.prevent_default ev;
+      Jv.set (Ev.to_jv ev)
+        "returnValue" (Jv.of_jstr Jstr.empty) (* for chrome *)
+    end
+end
+
 (* Events *)
 
 module Event = struct
@@ -275,6 +339,7 @@ module Event = struct
     Ok (Ev.listen etype cb target)
 
   let connect_el cb el () =
+    Query.stamp_if_needed el;
     el_log_if_error el @@
     let* ev = of_el el in
     if ev.once then Ok (ignore (once ev el cb)) else
@@ -553,37 +618,6 @@ module Header = struct
     Ok ()
 end
 
-(* Query *)
-
-module Query = struct
-  let append_form_data fd0 fd1 =
-    if Form.Data.is_empty fd0 then (* avoid append dance *) fd1 else
-    let append_entry k v fd = match v with
-    | `String v -> Form.Data.append fd k v; fd
-    | `File f -> Form.Data.append_blob fd k (File.as_blob f); fd
-    in
-    Form.Data.fold append_entry fd1 fd0
-
-  let append_el_query_data el fd =
-    match Jstr.(equal (El.tag_name el) (Jstr.v "form")) with
-    | true -> append_form_data fd (Form.Data.of_form (Form.of_el el))
-    | false ->
-        let v = El.prop El.Prop.value el in
-        if Jstr.is_empty v then fd else
-        let n = El.prop El.Prop.name el in
-        let n = if Jstr.is_empty n then Jstr.v "value" else n in
-        Form.Data.append fd n v; fd
-
-  let of_el el ~url =
-    let ps = Uri.Params.of_jstr (Uri.query url) in
-    let fd = Form.Data.of_uri_params ps in
-    match El.at At.query el with
-    | None -> append_el_query_data el fd
-    | Some sel ->
-        let sel = Sel.of_jstr sel in
-        Sel.fold_find ~start:el sel append_el_query_data fd
-end
-
 (* Requests *)
 
 module Request = struct
@@ -712,9 +746,14 @@ let install_observer () = (* Observe DOM additions and removals *)
   let opts = Jv.obj [| "childList", Jv.true'; "subtree", Jv.true' |] in
   Mutation_observer.observe o (Document.root G.document) opts
 
+let install_query_rescue () = (* Rescues changed query data *)
+  let window = Window.as_target G.window in
+  Ev.listen Ev.beforeunload Query.rescue_on_beforeunload window
+
 let init () =
   Event.connect_descendents do_request (Document.root G.document);
-  install_observer ()
+  install_observer ();
+  install_query_rescue ()
 
 module Ev = struct
   let cycle_start = ev_cycle_start
