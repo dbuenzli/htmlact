@@ -43,6 +43,9 @@ Hc_page
 {1:todo TODO}
 
 {ul
+{- Review animation interaction for hc-in, it's not so
+   good to have transition on bare elements which
+   are triggered according to .hc-in -> bare}
 {- Provide and trigger events for [Hc] behaviour itself, this
    allows to chain [Hc] connections in interesting ways and
    helps coordinating with other front end code.

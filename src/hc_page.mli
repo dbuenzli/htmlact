@@ -40,12 +40,26 @@ module Ev : sig
       hooks ?  *)
 end
 
+
 (**/**)
+
+
+(* FIXME for now we expose that to implement the
+   warn changes on unload.
+
+   Maybe hc should provide something built-in *)
+
+module Query : sig
+  val append_el_query_data :
+    Brr.El.t -> Brr_io.Form.Data.t -> Brr_io.Form.Data.t
+end
 
 module Effect : sig
   type kind = Element | Children | Insert of Jstr.t | None' | Event of Jstr.t
   val feedback_remove : target:Brr.El.t -> kind -> unit Fut.t
 end
+
+
 (**/**)
 
 (*---------------------------------------------------------------------------
