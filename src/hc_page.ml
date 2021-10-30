@@ -218,6 +218,8 @@ module Query = struct
   let stamp_changed el =
     not (Jstr.equal (rescue_stamp el) (El.prop hc_rescue_stamp_prop el))
 
+  let cancel_rescue_if_needed el = El.set_at At.query_rescue None el
+
   let rescue_on_beforeunload ev =
     let check_els = Jstr.(v "[" + At.query_rescue + v "='true']") in
     let check el rescue = rescue || stamp_changed el in
@@ -679,6 +681,7 @@ let http_request requestel meth url query target effect feedback =
   | Error _ as e -> Feedback.error_request ~requestel feedback; Fut.return e
   | Ok resp ->
       let hs = Fetch.Response.headers resp in
+      let () = Query.cancel_rescue_if_needed requestel in
       (* TODO do stuff with status ? *)
       match Header.handle_response ~requestel feedback hs with
       | Error _ as e -> Feedback.error_request ~requestel feedback; Fut.return e
