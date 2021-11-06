@@ -48,22 +48,22 @@ let example_map =
   List.fold_left add Smap.empty examples
 
 let serve_examples r =
-  let prefix = List.hd (Req.path r) in
+  let prefix = List.hd (Http.Req.path r) in
   match Smap.find_opt prefix example_map with
-  | None -> Resp.not_found_404 ~explain:"No such example" ()
+  | None -> Http.Resp.not_found_404 ~explain:"No such example" ()
   | Some (module E : Example.T) ->
-      let* r = Req.forward_service ~strip:[prefix] r in
+      let* r = Http.Req.forward_service ~strip:[prefix] r in
       E.serve r
 
 let service file_root r =
-  Resp.result @@ match Req.path r with
+  Http.Resp.result @@ match Http.Req.path r with
   | ["hc-page.js" | "hc-page.map"] ->
-      let* _m = Req.Allow.(meths [get] r) in
-      let* file = Req.to_absolute_filepath ~root:file_root r in
+      let* `GET = Http.Req.allow Http.Meth.[get] r in
+      let* file = Http.Req.to_absolute_filepath ~root:file_root r in
       Webs_unix.send_file r file
   | [""] ->
-      let* `GET = Req.Allow.(meths [get] r) in
-      Ok (Resp.html Http.ok_200 index_page)
+      let* `GET = Http.Req.allow Http.Meth.[get] r in
+      Ok (Http.Resp.html Http.ok_200 index_page)
   | _ ->
       serve_examples r
 

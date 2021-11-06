@@ -57,39 +57,39 @@ let actions urlf =
 
 let index r =
   let urlf = Example.urlf r in
-  let* m = Req.Allow.(meths [get;post] r) in
+  let* m = Http.Req.allow Http.Meth.[get;post] r in
   match m with
   | `GET ->
       let bookmarks = table_view urlf (Bookmark.all ()) in
       let content = El.splice [bookmarks; actions urlf] in
       let page = Example.page ~style ~id ~title:name [description; content] in
-      Ok (Resp.html Http.ok_200 page)
+      Ok (Http.Resp.html Http.ok_200 page)
   | `POST ->
-      let* q = Req.to_query r in
+      let* q = Http.Req.to_query r in
       match Http.Query.find "action" q with
       | Some "restore" ->
           Bookmark.restore_deleted ();
           let part = Example.part [table_view urlf (Bookmark.all ())] in
-          Ok (Resp.html Http.ok_200 part)
+          Ok (Http.Resp.html Http.ok_200 part)
       | v ->
           let some = strf "unknown action %s" in
           let explain = Option.fold ~none:"missing action" ~some v in
-          Resp.bad_request_400 ~explain ()
+          Http.Resp.bad_request_400 ~explain ()
 
 let bookmark_delete id r = match int_of_string_opt id with
-| None -> Resp.bad_request_400 ~explain:"illegal id" ()
+| None -> Http.Resp.bad_request_400 ~explain:"illegal id" ()
 | Some id ->
-    let* _m = Req.Allow.(meths [delete] r) in
+    let* `DELETE = Http.Req.allow Http.Meth.[delete] r in
     match Bookmark.get id with
-    | None -> Ok (Resp.html Http.ok_200 (Example.part []))
+    | None -> Ok (Http.Resp.html Http.ok_200 (Example.part []))
     | Some id ->
         Bookmark.delete id;
-        Ok (Resp.html Http.ok_200 (Example.part []))
+        Ok (Http.Resp.html Http.ok_200 (Example.part []))
 
-let serve r = match Req.path r with
+let serve r = match Http.Req.path r with
 | [""] -> index r
 | ("bookmark" :: [id]) -> bookmark_delete id r
-| p -> Resp.not_found_404 ()
+| p -> Http.Resp.not_found_404 ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

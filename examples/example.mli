@@ -11,7 +11,7 @@ module type T = sig
   val name : string
   val synopsis : string
   val prefix : string
-  val serve : Req.t -> (Resp.t, Resp.t) result
+  val serve : Http.req -> (Http.resp, Http.resp) result
 end
 
 val page : ?style:string -> id:string -> title:string -> El.html list -> string
@@ -30,13 +30,12 @@ val input_field :
 val field : ?at:At.t list -> El.html list -> El.html
 
 type urlf
-val urlf : Req.t -> urlf
+val urlf : Http.req -> urlf
 val uf : urlf -> ('a, unit, string, string) format4 -> 'a
 
-
-val req_decode : Req.t -> (Req.t -> 'a) -> ('a, Resp.t) result
+val req_decode : Http.req -> (Http.req -> 'a) -> ('a, Http.resp) result
 val req_decode_query :
-  Req.t -> (Req.t -> Http.Query.t -> 'a) -> ('a, Resp.t) result
+  Http.req -> (Http.req -> Http.query -> 'a) -> ('a, Http.resp) result
 
 val starts_with : prefix:string -> string -> bool
 

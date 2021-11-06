@@ -35,7 +35,8 @@ let bookmark_selector b =
 
 let selectable_bookmark ?(updated = fun _ -> false) b =
   let status = if b.Bookmark.broken then "broken" else "alive" in
-  El.tr ~at:At.(add_if (updated b) (class' "updated") [class' status])
+  let at = At.if' (updated b) (At.class' "updated") :: At.class' status :: [] in
+  El.tr ~at
     [ El.td [bookmark_selector b];
       El.td [El.txt (String.capitalize_ascii status)];
       El.td [El.a ~at:At.[href b.Bookmark.link] [El.txt b.Bookmark.name]]]
@@ -58,7 +59,7 @@ let actions urlf =
   El.div [alive; broken]
 
 let update_bookmark_status r =
-  let* q = Req.to_query r in
+  let* q = Http.Req.to_query r in
   try
     let broken = match Http.Query.find "action" q with
     | Some "set-alive" -> false
@@ -78,25 +79,25 @@ let update_bookmark_status r =
     let () = List.iter Bookmark.set ubs in
     Ok ids
   with
-  | Failure explain -> Resp.bad_request_400 ~explain ()
+  | Failure explain -> Http.Resp.bad_request_400 ~explain ()
 
 let index urlf =
   let content = El.splice [table_view (Bookmark.all ()); actions urlf] in
   Example.page ~style ~id ~title:name [description; content]
 
 let bookmark_table r =
-  let* m = Req.Allow.(meths [get; put] r) in
+  let* m = Http.Req.allow Http.Meth.[get; put] r in
   match m with
-  | `GET -> Ok (Resp.html Http.ok_200 (index (Example.urlf r)))
+  | `GET -> Ok (Http.Resp.html Http.ok_200 (index (Example.urlf r)))
   | `PUT ->
       let* updated = update_bookmark_status r in
       let updated b = List.exists (fun id -> b.Bookmark.id = id) updated in
       let table = Example.part [table_view ~updated (Bookmark.all ())] in
-      Ok (Resp.html Http.ok_200 table)
+      Ok (Http.Resp.html Http.ok_200 table)
 
-let serve r = match Req.path r with
+let serve r = match Http.Req.path r with
 | [""] -> bookmark_table r
-| p -> Resp.not_found_404 ()
+| p -> Http.Resp.not_found_404 ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

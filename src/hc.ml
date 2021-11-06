@@ -66,7 +66,7 @@ let reload = Http.Name.v "hc-reload"
 let location_push = Http.Name.v "hc-location-push"
 let location_replace = Http.Name.v "hc-location-replace"
 let location_title = Http.Name.v "hc-location-title"
-let encode_location_title = Http.Pct.encode
+let encode_location_title = Http.Pct.encode `Uri
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

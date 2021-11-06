@@ -11,32 +11,35 @@ module type T = sig
   val name : string
   val synopsis : string
   val prefix : string
-  val serve : Req.t -> (Resp.t, Resp.t) result
+  val serve : Http.req -> (Http.resp, Http.resp) result
 end
 
 let src_root = "https://erratique.ch/repos/hc/tree/examples/"
 
-let style = Style.base
 let link ~href:r text = El.a ~at:At.[href r] [El.txt text]
-let page ?style:st ~id ~title content =
+
+let inline_style s = El.style [El.unsafe_raw s]
+
+let page ?style ~id ~title:t content =
+  let root = String.equal t "Hc examples" in
+  let title = if not root then Printf.sprintf "%s – Hc examples" t else t in
   let scripts = ["/hc-page.js"] in
-  let h1 =
-    El.txt title ::
-    (if title = "Hc examples" then [] else
-     let src = src_root ^ (String.uncapitalize_ascii id ^ ".ml") in
-     [El.txt " ";
-      El.small [link ~href:src "src"; El.txt " ";
-                link ~href:"/" "up"]])
-  in
-  let body = El.body [ El.h1 h1; El.splice content] in
   let more_head =
-    let el_style s = El.style [El.unsafe_raw s] in
-    let more_style = match st with None -> El.void | Some t -> el_style t in
-    El.splice [ el_style style; more_style ]
+    let more_style = Option.fold ~none:El.void ~some:inline_style style in
+    El.splice [ inline_style Style.base; more_style ]
   in
-  let title = Printf.sprintf "%s – Hc examples" title in
-  El.to_string ~doc_type:true @@
-  El.page ~more_head ~scripts ~title body
+  let h1 =
+    let links =
+      if root then El.void else
+      let src = src_root ^ (String.uncapitalize_ascii id ^ ".ml") in
+      let src_link = link ~href:src "src" in
+      El.splice [El.sp; El.small [src_link; El.sp; link ~href:"/" "up"]]
+    in
+    El.h1 [El.txt title; links]
+  in
+  let body = El.body [ h1; El.splice content] in
+  let page = El.page ~title ~scripts ~more_head body in
+  El.to_string ~doc_type:true page
 
 let part content = El.to_string ~doc_type:false (El.splice content)
 
@@ -65,24 +68,24 @@ let button ?at label = _button "button" ?at label
 let input_field ?(autocomplete = false) ?(at = []) ~type':t ~name:n fv =
   let size = max 20 (String.length fv + 4) in
   let at = (At.v "size" (string_of_int size)) :: at in
-  let at = At.add_if (not autocomplete) (At.autocomplete "off") at in
+  let at = At.if' (not autocomplete) (At.autocomplete "off") :: at in
   El.input ~at:At.(class' c_field :: type' t :: name n :: value fv :: at) ()
 
 let field ?(at = []) fv =
   El.span ~at:At.(class' c_field :: at) fv
 
 type urlf = string
-let urlf r = Http.Path.encode (Req.service_path r) ^ "/"
+let urlf r = Http.Path.encode (Http.Req.service_path r) ^ "/"
 let uf urlf fmt = Printf.sprintf ("%s" ^^ fmt) urlf
 
-let req_decode req dec = match dec req with
-| exception Failure explain -> Resp.bad_request_400 ~explain () | v -> Ok v
+let req_decode req dec = try Ok (dec req) with
+| Failure explain -> Http.Resp.bad_request_400 ~explain ()
 
-let req_decode_query req dec = match Req.to_query req with
+let req_decode_query req dec = match Http.Req.to_query req with
 | Error _ as e -> e
 | Ok q ->
-    match dec req q with
-    | exception Failure explain -> Resp.bad_request_400 ~explain () | v -> Ok v
+    try Ok (dec req q) with
+    | Failure explain -> Http.Resp.bad_request_400 ~explain ()
 
 let starts_with ~prefix s =
   let len_a = String.length prefix in

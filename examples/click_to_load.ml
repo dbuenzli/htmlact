@@ -70,24 +70,24 @@ let index urlf =
 
 let show_bookmark_table r =
   let urlf = Example.urlf r in
-  let* _m = Req.Allow.(meths [get] r) in
-  let* q = Req.to_query r in
+  let* `GET = Http.Req.allow Http.Meth.[get] r in
+  let* q = Http.Req.to_query r in
   let* page = match Http.Query.find "page" q with
   | None -> Ok None
   | Some page ->
       try Ok (Some (int_of_string page)) with
-      | Failure e -> Error (Resp.v ~explain:e Http.bad_request_400)
+      | Failure e -> Error (Http.Resp.v ~explain:e Http.bad_request_400)
   in
   match page with
-  | None -> Ok (Resp.html Http.ok_200 (index urlf))
+  | None -> Ok (Http.Resp.html Http.ok_200 (index urlf))
   | Some page_num ->
       match bookmark_page_rows urlf page_num with
-      | [] -> Resp.not_found_404 ()
-      | ps -> Ok (Resp.html Http.ok_200 (Example.part ps))
+      | [] -> Http.Resp.not_found_404 ()
+      | ps -> Ok (Http.Resp.html Http.ok_200 (Example.part ps))
 
-let serve r = match Req.path r with
+let serve r = match Http.Req.path r with
 | [""] -> show_bookmark_table r
-| p -> Resp.not_found_404 ()
+| p -> Http.Resp.not_found_404 ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

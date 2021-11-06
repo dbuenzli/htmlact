@@ -34,7 +34,7 @@ let autocomplete_bookmarks ~prefix =
   List.filter has_prefix (Bookmark.all ())
 
 let autocomplete_options r =
-  let* q = Req.to_query r in
+  let* q = Http.Req.to_query r in
   let part =
     let t = Option.value ~default:"" (Http.Query.find "title" q) in
     let t = String.trim t in
@@ -42,7 +42,7 @@ let autocomplete_options r =
     let option b = El.option ~at:At.[value b.Bookmark.name] [] in
     List.map option (autocomplete_bookmarks ~prefix:t)
   in
-  Ok (Resp.html Http.ok_200 (Example.part part))
+  Ok (Http.Resp.html Http.ok_200 (Example.part part))
 
 let bookmark_name_input urlf =
   let list_id = "titles" in
@@ -67,17 +67,17 @@ let bookmark_name_input urlf =
     El.form [input; El.datalist ~at:At.[id list_id] []]]
 
 let bookmark_name r =
-  let* m = Req.Allow.(meths [get; post] r) in
+  let* m = Http.Req.allow Http.Meth.[get; post] r in
   match m with
   | `POST -> autocomplete_options r
   | `GET ->
       let content = El.splice (bookmark_name_input (Example.urlf r)) in
       let page = Example.page ~style ~id ~title:name [description; content] in
-      Ok (Resp.html Http.ok_200 page)
+      Ok (Http.Resp.html Http.ok_200 page)
 
-let serve r = match Req.path r with
+let serve r = match Http.Req.path r with
 | [""] -> bookmark_name r
-| p -> Resp.not_found_404 ()
+| p -> Http.Resp.not_found_404 ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers
