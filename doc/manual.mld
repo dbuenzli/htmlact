@@ -167,9 +167,11 @@ if unspecified.
 
 {2:data_query [data-query="<sel>"]}
 
-The value of [<sel>] determines the elements that are used to
-specify the query of the request.
-If unspecified this is the {{!data_request}request element} itself.
+The value of [<sel>] is a {{!selector}selector} which, when applied on
+the request element, determines the elements that are used to specify
+the query of the request.  If unspecified this is the
+{{!data_request}request element} itself.  See the {{!syntax for
+selectors
 
 The final query of the request is determined by taking the query part of
 the {{!data_request}requested URL} and for each of the elements
@@ -267,11 +269,12 @@ Attributes of [hc] use
 {{:https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors}CSS
 selectors} with
 {{:https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector}
-[querySelector]} to gather query data and target response effects. However
-CSS selectors have no syntax for addressing ancestors. We slightly extend the
-syntax to allow it because in many cases this eschews the need to use
-element identifiers which improves modularity – use with care, it can
-also improve {e obscurity}.
+[querySelector]} to gather query data and target response effects. The
+selector is applied on the request element, however CSS selectors have
+no syntax for addressing ancestors. We slightly extend the syntax to
+allow it because in many cases this eschews the need to use element
+identifiers which improves modularity – use with care, it can also
+improve {e obscurity}.
 
 We allow a CSS selector to be prefixed by a sequence of ancestor
 specifications which select the root on which the CSS selector is then
@@ -285,6 +288,8 @@ then apply the CSS selector on ancestor that was found.
 
 Examples:
 {v
+  :scope > *         # children   (regular CSS selector)
+  :scope *           # descendent (regular CSS selector)
   :up                # parent
   :up :up            # parent's parent
   :up :up :scope > * # parent's parent's children
