@@ -192,7 +192,7 @@ otherwise in the request body encoded with
 [application/x-www-form-urlencoded] unless there is a file input in
 which case [multipart/form-data] is used.
 
-{2:data_query_rescue [data-query-rescue="<bool>"]}
+{2:data_query_rescue [data-query-rescue="<bool>|force"]}
 
 Use this to prevent users from leaving a page without performing the
 request if the query data changed.
@@ -203,6 +203,10 @@ the
 {{:https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event}
 [beforeunload]} window event triggers the browser specific "leave page
 confirmation" modal is triggered.
+
+If [force], this forces the event to trigger (e.g. if you performed
+validation on the server and put it back on page).
+
 
 {2:data_event [data-event="<ev> <mod>*"]}
 

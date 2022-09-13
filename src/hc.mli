@@ -27,8 +27,9 @@ val query : string -> At.t
 (** [query sel] is the {{!page-manual.data_target}[data-query]} attribute
     [sel]. *)
 
-val query_rescue : bool -> At.t
-(** [query_rescue b]is the {{!page-manual.data_query_rescue}[data-query-rescue]}
+val query_rescue : [`Bool of bool | `Force] -> At.t
+(** [query_rescue b]
+    is the {{!page-manual.data_query_rescue}[data-query-rescue]}
     attribute [b]. *)
 
 val event_src : string -> At.t

@@ -212,8 +212,17 @@ module Query = struct
   let stamp_if_needed el = match El.at At.query_rescue el with
   | None -> ()
   | Some rescue ->
-      if not (Jstr.equal (Jstr.v "true") rescue) then () else
-      El.set_prop hc_rescue_stamp_prop (rescue_stamp el) el
+      if Jstr.equal (Jstr.v "false") rescue then () else
+      let stamp = rescue_stamp el in
+      if Jstr.equal (Jstr.v "true") rescue
+      then El.set_prop hc_rescue_stamp_prop stamp el else
+      if Jstr.equal (Jstr.v "force") rescue
+      then begin
+        El.set_prop hc_rescue_stamp_prop Jstr.(v "Force!" + stamp) el;
+        El.set_at At.query_rescue (Some (Jstr.v "true")) el;
+      end else
+      let err = Jstr.(At.query_rescue + v ": invalid value: " + rescue) in
+      el_log_if_error el (Error err)
 
   let stamp_changed el =
     not (Jstr.equal (rescue_stamp el) (El.prop hc_rescue_stamp_prop el))
