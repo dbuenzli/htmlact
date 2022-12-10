@@ -34,11 +34,11 @@ let hc_page_js =
 (* Examples *)
 
 let serve_reload b u ~args = match B0_unit.get_meta B0_meta.exe_file u with
-| Error _ as e -> Log.if_error e ~use:(Fut.return B00_cli.Exit.some_error)
+| Error _ as e -> Log.if_error e ~use:(Fut.return B0_cli.Exit.some_error)
 | Ok exe ->
     let open Result.Syntax in
     Fut.bind exe @@ fun exe ->
-    Log.if_error ~use:(Fut.return B00_cli.Exit.some_error) @@
+    Log.if_error ~use:(Fut.return B0_cli.Exit.some_error) @@
     Result.map Fut.return @@
     let cwd = B0_build.scope_dir b u in
     let* server = Os.Cmd.spawn ~cwd Cmd.(path exe %% list args) in

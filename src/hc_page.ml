@@ -345,7 +345,7 @@ module Event = struct
         prevent_some_default e;
         if filter ev e then cb e else ()
     in
-    Ok (Ev.listen etype cb target)
+    Ok (ignore (Ev.listen etype cb target))
 
   let connect_el cb el () =
     Query.stamp_if_needed el;
@@ -762,7 +762,7 @@ let install_observer () = (* Observe DOM additions and removals *)
 
 let install_query_rescue () = (* Rescues changed query data *)
   let window = Window.as_target G.window in
-  Ev.listen Ev.beforeunload Query.rescue_on_beforeunload window
+  ignore (Ev.listen Ev.beforeunload Query.rescue_on_beforeunload window)
 
 let init () =
   Event.connect_descendents do_request (Document.root G.document);
