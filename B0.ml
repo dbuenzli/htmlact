@@ -7,8 +7,7 @@ let brr = B0_ocaml.libname "brr"
 let webs = B0_ocaml.libname "webs"
 let webs_cli = B0_ocaml.libname "webs.cli"
 let webs_unix = B0_ocaml.libname "webs.unix"
-let webs_httpc = B0_ocaml.libname "webs.httpc"
-let webs_html = B0_ocaml.libname "webs.html"
+let htmlit = B0_ocaml.libname "htmlit"
 
 let hc = B0_ocaml.libname "hc"
 let hc_page = B0_ocaml.libname "hc.page"
@@ -17,7 +16,7 @@ let hc_page = B0_ocaml.libname "hc.page"
 
 let hc_lib =
   let srcs = Fpath.[ `File (v "src/hc.mli"); `File (v "src/hc.ml") ] in
-  let requires = [webs; webs_html] in
+  let requires = [webs; htmlit] in
   B0_ocaml.lib hc ~doc:"Hc library" ~srcs ~requires
 
 let hc_page_lib =
@@ -51,7 +50,7 @@ let serve_reload b u ~args = match B0_unit.get_meta B0_meta.exe_file u with
 
 let hc_examples =
   let doc = "Hc examples" in
-  let requires = [ hc; webs; webs_cli; webs_unix; webs_httpc; webs_html] in
+  let requires = [ hc; webs; webs_cli; webs_unix; htmlit] in
   let srcs = Fpath.[ `Dir (v "examples"); ] in
   let meta = B0_meta.(empty |> add B0_ocaml.Meta.supported_code `Native) in
   let wrap proc b = B0_build.require b hc_page_js; proc b in
@@ -82,6 +81,7 @@ let default =
       "topkg", {|build & >= "1.0.3"|};
       "brr", "";
       "webs", "";
+      "htmlit", "";
       "js_of_ocaml-compiler", {|>= "3.7.1"|};
     ]
     |> tag B0_opam.tag

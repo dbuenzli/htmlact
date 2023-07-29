@@ -3,7 +3,7 @@
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
-(** Hc HTML generation and HTTP headers for {!Webs}.
+(** Hc HTML generation and HTTP headers for {!Webs} and {!Htmlit}
 
     These function help generate Hc {{!page-manual.attref}data
     attributes} and {{!page-manual.responses}HTTP headers} with
@@ -11,15 +11,15 @@
     to generate your HTML. *)
 
 open Webs
-open Webs_html
+open Htmlit
 
 (** {1:atts Attributes} *)
 
-val request : ?meth:[< Http.meth | `Sse] -> string -> At.t
+val request : ?meth:[< Http.Method.t | `Sse] -> string -> At.t
 (** [request ~meth r] is a {{!page-manual.data_request}[data-request]}
     attribute for URL [r] using method [meth] (defaults to [`GET]). *)
 
-val request_path : ?meth:[< Http.meth | `Sse] -> Http.path -> At.t
+val request_path : ?meth:[< Http.Method.t | `Sse] -> Http.Path.t -> At.t
 (** [request ~meth p] is a {{!page-manual.data_request}[data-request]}
     attribute for URL [p] using method [meth] (defaults to [`GET]). *)
 
@@ -108,28 +108,28 @@ end
 
 (** {2:requests Requests} *)
 
-val hc : Webs.Http.name
+val hc : Webs.Http.Headers.Name.t
 (** [hc] is the {{!page-manual.header_hc}[hc]} header. *)
 
 (** {2:responses Responses} *)
 
-val redirect : Webs.Http.name
+val redirect : Webs.Http.Headers.Name.t
 (** [redirect] is the {{!page-manual.header_redirect}[hc-redirect]}
     header. *)
 
-val reload : Webs.Http.name
+val reload : Webs.Http.Headers.Name.t
 (** [reload] is the {{!page-manual.header_reload}[hc-reload]} header. *)
 
-val location_push : Webs.Http.name
+val location_push : Webs.Http.Headers.Name.t
 (** [location_push] is the {{!page-manual.header_location_push}
     [hc-location-push]} header. *)
 
-val location_replace : Webs.Http.name
+val location_replace : Webs.Http.Headers.Name.t
 (** [location_replace] is the
     {{!page-manual.header_location_replace}[hc-location-replace]}
     header. *)
 
-val location_title : Webs.Http.name
+val location_title : Webs.Http.Headers.Name.t
 (** [location_title] is the
     {{!page-manual.header_location_title}[hc-location-title]} header. *)
 

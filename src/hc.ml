@@ -4,7 +4,7 @@
   ---------------------------------------------------------------------------*)
 
 open Webs
-open Webs_html
+open Htmlit
 
 let strf = Printf.sprintf
 
@@ -12,7 +12,7 @@ let request ?meth url =
   let req = match meth with
   | None -> url
   | Some `Sse -> strf "SSE %s" url
-  | Some (#Http.meth as m) -> strf "%s %s" (Http.Meth.encode m) url
+  | Some (#Http.Method.t as m) -> strf "%s %s" (Http.Method.encode m) url
   in
   At.v "data-request" req
 
@@ -63,12 +63,12 @@ end
 
 (* Headers *)
 
-let hc = Http.Name.v "hc"
-let redirect = Http.Name.v "hc-redirect"
-let reload = Http.Name.v "hc-reload"
-let location_push = Http.Name.v "hc-location-push"
-let location_replace = Http.Name.v "hc-location-replace"
-let location_title = Http.Name.v "hc-location-title"
+let hc = Http.Headers.name "hc"
+let redirect = Http.Headers.name "hc-redirect"
+let reload = Http.Headers.name "hc-reload"
+let location_push = Http.Headers.name "hc-location-push"
+let location_replace = Http.Headers.name "hc-location-replace"
+let location_title = Http.Headers.name "hc-location-title"
 let encode_location_title = Http.Pct.encode `Uri
 
 (*---------------------------------------------------------------------------

@@ -4,7 +4,7 @@
   ---------------------------------------------------------------------------*)
 
 open Webs
-open Webs_html
+open Htmlit
 
 let ( let* ) = Result.bind
 let strf = Printf.sprintf
@@ -59,9 +59,9 @@ let actions urlf =
   El.div [alive; broken]
 
 let update_bookmark_status r =
-  let* q = Http.Req.to_query r in
+  let* q = Http.Request.to_query r in
   try
-    let broken = match Http.Query.find "action" q with
+    let broken = match Http.Query.find_first "action" q with
     | Some "set-alive" -> false
     | Some "set-broken" -> true
     | Some a -> failwith (strf "%S: unknown action" a)
@@ -79,25 +79,25 @@ let update_bookmark_status r =
     let () = List.iter Bookmark.set ubs in
     Ok ids
   with
-  | Failure explain -> Http.Resp.bad_request_400 ~explain ()
+  | Failure explain -> Http.Response.bad_request_400 ~explain ()
 
 let index urlf =
   let content = El.splice [table_view (Bookmark.all ()); actions urlf] in
   Example.page ~style ~id ~title:name [description; content]
 
 let bookmark_table r =
-  let* m = Http.Req.allow Http.Meth.[get; put] r in
+  let* m = Http.Request.allow Http.Method.[get; put] r in
   match m with
-  | `GET -> Ok (Http.Resp.html Http.ok_200 (index (Example.urlf r)))
+  | `GET -> Ok (Http.Response.html Http.Status.ok_200 (index (Example.urlf r)))
   | `PUT ->
       let* updated = update_bookmark_status r in
       let updated b = List.exists (fun id -> b.Bookmark.id = id) updated in
       let table = Example.part [table_view ~updated (Bookmark.all ())] in
-      Ok (Http.Resp.html Http.ok_200 table)
+      Ok (Http.Response.html Http.Status.ok_200 table)
 
-let serve r = match Http.Req.path r with
+let serve r = match Http.Request.path r with
 | [""] -> bookmark_table r
-| p -> Http.Resp.not_found_404 ()
+| p -> Http.Response.not_found_404 ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

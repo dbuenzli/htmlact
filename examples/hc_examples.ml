@@ -4,7 +4,7 @@
   ---------------------------------------------------------------------------*)
 
 open Webs
-open Webs_html
+open Htmlit
 
 (* Serve the examples *)
 
@@ -48,36 +48,36 @@ let example_map =
   List.fold_left add Smap.empty examples
 
 let serve_examples r =
-  let prefix = List.hd (Http.Req.path r) in
+  let prefix = List.hd (Http.Request.path r) in
   match Smap.find_opt prefix example_map with
-  | None -> Http.Resp.not_found_404 ~explain:"No such example" ()
+  | None -> Http.Response.not_found_404 ~explain:"No such example" ()
   | Some (module E : Example.T) ->
-      let* r = Http.Req.forward_service ~strip:[prefix] r in
+      let* r = Http.Request.forward_service ~strip:[prefix] r in
       E.serve r
 
 let service file_root r =
-  Http.Resp.result @@ match Http.Req.path r with
+  Http.Response.result @@ match Http.Request.path r with
   | ["hc-page.js" | "hc-page.map"] ->
-      let* `GET = Http.Req.allow Http.Meth.[get] r in
-      let* file = Http.Req.to_absolute_filepath ~root:file_root r in
-      Webs_unix.send_file r file
+      let* `GET = Http.Request.allow Http.Method.[get] r in
+      let* file = Http.Request.to_absolute_filepath ~file_root r in
+      Webs_fs.send_file r file
   | [""] ->
-      let* `GET = Http.Req.allow Http.Meth.[get] r in
-      Ok (Http.Resp.html Http.ok_200 index_page)
+      let* `GET = Http.Request.allow Http.Method.[get] r in
+      Ok (Http.Response.html Http.Status.ok_200 index_page)
   | _ ->
       serve_examples r
 
 let find_root () = (* very hackish *)
   let bin_dir = Filename.(dirname Sys.executable_name) in
   match Filename.basename bin_dir with
-  | "bin" -> Webs_unix.realpath (Filename.concat bin_dir "../share/hc")
-  | _ -> Webs_unix.realpath (Filename.concat bin_dir "../hc-page-js")
+  | "bin" -> Unix.realpath (Filename.concat bin_dir "../share/hc")
+  | _ -> Unix.realpath (Filename.concat bin_dir "../hc-page-js")
 
 let main () =
   let root = find_root () in
-  Webs_cli.quick_serve ~name:"hc" (service root)
+  Webs_quick.serve ~name:"hc" (service root)
 
-let () = if !Sys.interactive then () else main ()
+let () = if !Sys.interactive then () else exit (main ())
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

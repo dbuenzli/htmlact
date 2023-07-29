@@ -4,7 +4,7 @@
   ---------------------------------------------------------------------------*)
 
 open Webs
-open Webs_html
+open Htmlit
 
 let ( let* ) r f = match r with Ok v -> f v | Error _ as e -> e
 let strf = Printf.sprintf
@@ -63,8 +63,8 @@ let editor_view urlf b =
     El.div [ cancel_button urlf b; Example.submit "Save" ]]
 
 let put_bookmark r b =
-  let* q = Http.Req.to_query r in
-  let get n d = Option.value ~default:d (Http.Query.find n q) in
+  let* q = Http.Request.to_query r in
+  let get n d = Option.value ~default:d (Http.Query.find_first n q) in
   let name = get "name" b.Bookmark.name in
   let link = get "link" b.Bookmark.link in
   let description = get "description" b.Bookmark.description in
@@ -73,34 +73,34 @@ let put_bookmark r b =
   Ok (view (Example.urlf r) (Bookmark.get b'.Bookmark.id |> Option.get))
 
 let bookmark_part id act r = match int_of_string_opt id with
-| None -> Http.Resp.bad_request_400 ~explain:"illegal id" ()
+| None -> Http.Response.bad_request_400 ~explain:"illegal id" ()
 | Some id ->
     match Bookmark.get id with
-    | None -> Http.Resp.not_found_404 ()
+    | None -> Http.Response.not_found_404 ()
     | Some b ->
         match act with
         | [""] | [] ->
-            let* m = Http.Req.allow Http.Meth.[get; put] r in
+            let* m = Http.Request.allow Http.Method.[get; put] r in
             let* view = match m with
             | `GET -> Ok (view (Example.urlf r) b)
             | `PUT -> put_bookmark r b
             in
-            Result.ok @@ Http.Resp.html Http.ok_200 (Example.part [view])
+            Result.ok @@ Http.Response.html Http.Status.ok_200 (Example.part [view])
         | ["editor"] ->
             let editor = editor_view (Example.urlf r) b in
-            Result.ok @@ Http.Resp.html Http.ok_200 (Example.part [editor])
+            Result.ok @@ Http.Response.html Http.Status.ok_200 (Example.part [editor])
         | _ ->
-            Http.Resp.not_found_404 ()
+            Http.Response.not_found_404 ()
 
 let index urlf =
   let b = Bookmark.get 1 |> Option.get in
   let content = view urlf b in
   Example.page ~style ~id ~title:name [description; content]
 
-let serve r = match Http.Req.path r with
-| [""] -> Ok (Http.Resp.html Http.ok_200 (index (Example.urlf r)))
+let serve r = match Http.Request.path r with
+| [""] -> Ok (Http.Response.html Http.Status.ok_200 (index (Example.urlf r)))
 | ("bookmark" :: id :: act) -> bookmark_part id act r
-| p -> Http.Resp.not_found_404 ()
+| p -> Http.Response.not_found_404 ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

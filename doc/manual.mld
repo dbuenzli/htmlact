@@ -170,8 +170,8 @@ if unspecified.
 The value of [<sel>] is a {{!selector}selector} which, when applied on
 the request element, determines the elements that are used to specify
 the query of the request.  If unspecified this is the
-{{!data_request}request element} itself.  See the {{!syntax for
-selectors
+{{!data_request}request element} itself. See the {{!selector}syntax
+for selectors}.
 
 The final query of the request is determined by taking the query part of
 the {{!data_request}requested URL} and for each of the elements

@@ -4,14 +4,14 @@
   ---------------------------------------------------------------------------*)
 
 open Webs
-open Webs_html
+open Htmlit
 
 module type T = sig
   val id : string
   val name : string
   val synopsis : string
   val prefix : string
-  val serve : Http.req -> (Http.resp, Http.resp) result
+  val serve : Http.Request.t -> (Http.Response.t, Http.Response.t) result
 end
 
 let src_root = "https://erratique.ch/repos/hc/tree/examples/"
@@ -39,9 +39,9 @@ let page ?style ~id ~title:t content =
   in
   let body = El.body [ h1; El.splice content] in
   let page = El.page ~title ~scripts ~more_head body in
-  El.to_string ~doc_type:true page
+  El.to_string ~doctype:true page
 
-let part content = El.to_string ~doc_type:false (El.splice content)
+let part content = El.to_string ~doctype:false (El.splice content)
 
 let table ?(headers = []) rows =
   let th txt = El.th [El.txt txt] in
@@ -75,17 +75,17 @@ let field ?(at = []) fv =
   El.span ~at:At.(class' c_field :: at) fv
 
 type urlf = string
-let urlf r = Http.Path.encode (Http.Req.service_path r) ^ "/"
+let urlf r = Http.Path.encode (Http.Request.service_path r) ^ "/"
 let uf urlf fmt = Printf.sprintf ("%s" ^^ fmt) urlf
 
 let req_decode req dec = try Ok (dec req) with
-| Failure explain -> Http.Resp.bad_request_400 ~explain ()
+| Failure explain -> Http.Response.bad_request_400 ~explain ()
 
-let req_decode_query req dec = match Http.Req.to_query req with
+let req_decode_query req dec = match Http.Request.to_query req with
 | Error _ as e -> e
 | Ok q ->
     try Ok (dec req q) with
-    | Failure explain -> Http.Resp.bad_request_400 ~explain ()
+    | Failure explain -> Http.Response.bad_request_400 ~explain ()
 
 let starts_with ~prefix s =
   let len_a = String.length prefix in

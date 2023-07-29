@@ -4,7 +4,7 @@
   ---------------------------------------------------------------------------*)
 
 open Webs
-open Webs_html
+open Htmlit
 
 let ( let* ) = Result.bind
 let strf = Printf.sprintf
@@ -57,39 +57,39 @@ let actions urlf =
 
 let index r =
   let urlf = Example.urlf r in
-  let* m = Http.Req.allow Http.Meth.[get;post] r in
+  let* m = Http.Request.allow Http.Method.[get;post] r in
   match m with
   | `GET ->
       let bookmarks = table_view urlf (Bookmark.all ()) in
       let content = El.splice [bookmarks; actions urlf] in
       let page = Example.page ~style ~id ~title:name [description; content] in
-      Ok (Http.Resp.html Http.ok_200 page)
+      Ok (Http.Response.html Http.Status.ok_200 page)
   | `POST ->
-      let* q = Http.Req.to_query r in
-      match Http.Query.find "action" q with
+      let* q = Http.Request.to_query r in
+      match Http.Query.find_first "action" q with
       | Some "restore" ->
           Bookmark.restore_deleted ();
           let part = Example.part [table_view urlf (Bookmark.all ())] in
-          Ok (Http.Resp.html Http.ok_200 part)
+          Ok (Http.Response.html Http.Status.ok_200 part)
       | v ->
           let some = strf "unknown action %s" in
           let explain = Option.fold ~none:"missing action" ~some v in
-          Http.Resp.bad_request_400 ~explain ()
+          Http.Response.bad_request_400 ~explain ()
 
 let bookmark_delete id r = match int_of_string_opt id with
-| None -> Http.Resp.bad_request_400 ~explain:"illegal id" ()
+| None -> Http.Response.bad_request_400 ~explain:"illegal id" ()
 | Some id ->
-    let* `DELETE = Http.Req.allow Http.Meth.[delete] r in
+    let* `DELETE = Http.Request.allow Http.Method.[delete] r in
     match Bookmark.get id with
-    | None -> Ok (Http.Resp.html Http.ok_200 (Example.part []))
+    | None -> Ok (Http.Response.html Http.Status.ok_200 (Example.part []))
     | Some id ->
         Bookmark.delete id;
-        Ok (Http.Resp.html Http.ok_200 (Example.part []))
+        Ok (Http.Response.html Http.Status.ok_200 (Example.part []))
 
-let serve r = match Http.Req.path r with
+let serve r = match Http.Request.path r with
 | [""] -> index r
 | ("bookmark" :: [id]) -> bookmark_delete id r
-| p -> Http.Resp.not_found_404 ()
+| p -> Http.Response.not_found_404 ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

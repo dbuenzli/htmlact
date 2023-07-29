@@ -4,7 +4,7 @@
   ---------------------------------------------------------------------------*)
 
 open Webs
-open Webs_html
+open Htmlit
 
 let ( let* ) = Result.bind
 let strf = Printf.sprintf
@@ -34,15 +34,15 @@ let autocomplete_bookmarks ~prefix =
   List.filter has_prefix (Bookmark.all ())
 
 let autocomplete_options r =
-  let* q = Http.Req.to_query r in
+  let* q = Http.Request.to_query r in
   let part =
-    let t = Option.value ~default:"" (Http.Query.find "title" q) in
+    let t = Option.value ~default:"" (Http.Query.find_first "title" q) in
     let t = String.trim t in
     if t = "" then [] else
     let option b = El.option ~at:At.[value b.Bookmark.name] [] in
     List.map option (autocomplete_bookmarks ~prefix:t)
   in
-  Ok (Http.Resp.html Http.ok_200 (Example.part part))
+  Ok (Http.Response.html Http.Status.ok_200 (Example.part part))
 
 let bookmark_name_input urlf =
   let list_id = "titles" in
@@ -67,17 +67,17 @@ let bookmark_name_input urlf =
     El.form [input; El.datalist ~at:At.[id list_id] []]]
 
 let bookmark_name r =
-  let* m = Http.Req.allow Http.Meth.[get; post] r in
+  let* m = Http.Request.allow Http.Method.[get; post] r in
   match m with
   | `POST -> autocomplete_options r
   | `GET ->
       let content = El.splice (bookmark_name_input (Example.urlf r)) in
       let page = Example.page ~style ~id ~title:name [description; content] in
-      Ok (Http.Resp.html Http.ok_200 page)
+      Ok (Http.Response.html Http.Status.ok_200 page)
 
-let serve r = match Http.Req.path r with
+let serve r = match Http.Request.path r with
 | [""] -> bookmark_name r
-| p -> Http.Resp.not_found_404 ()
+| p -> Http.Response.not_found_404 ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers

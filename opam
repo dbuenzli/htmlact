@@ -1,23 +1,7 @@
 opam-version: "2.0"
-synopsis: """Hypertext connection for dynamic web pages"""
-maintainer: ["Daniel Bünzli <daniel.buenzl i@erratique.ch>"]
-authors: ["The hc programmers"]
-homepage: "https://erratique.ch/software/hc"
-doc: "https://erratique.ch/software/hc/doc"
-dev-repo: "git+https://erratique.ch/repos/hc.git"
-bug-reports: "https://github.com/dbuenzli/hc/issues"
-license: ["ISC"]
-tags: ["front-end" "ui" "html" "org:erratique"]
-depends: ["ocaml" {>= "4.08.0"}
-          "ocamlfind" {build}
-          "ocamlbuild" {build}
-          "topkg" {build & >= "1.0.3"}
-          "brr"
-          "webs"
-          "js_of_ocaml-compiler" {>= "3.7.1"}]
-build: [["ocaml" "pkg/pkg.ml" "build" "--dev-pkg" "%{dev}%"
-           "--with-webs" "%{webs:installed}%"]]
-description: """
+name: "hc"
+synopsis: "Hypertext connection for dynamic web pages"
+description: """\
 Hc declares dynamic web pages by using HTML data attributes to
 seamlessly update the page with HTML fragments requested from the
 server.
@@ -32,3 +16,30 @@ driver depends on [brr][brr].
 Homepage: https://erratique.ch/software/hc
 
 [brr]: https://erratique.ch/software/brr"""
+maintainer: "Daniel Bünzli <daniel.buenzl i@erratique.ch>"
+authors: "The hc programmers"
+license: "ISC"
+tags: ["front-end" "ui" "html" "org:erratique"]
+homepage: "https://erratique.ch/software/hc"
+doc: "https://erratique.ch/software/hc/doc"
+bug-reports: "https://github.com/dbuenzli/hc/issues"
+depends: [
+  "ocaml" {>= "4.08.0"}
+  "ocamlfind" {build}
+  "ocamlbuild" {build}
+  "topkg" {build & >= "1.0.3"}
+  "brr"
+  "webs"
+  "htmlit"
+  "js_of_ocaml-compiler" {>= "3.7.1"}
+]
+build: [
+  "ocaml"
+  "pkg/pkg.ml"
+  "build"
+  "--dev-pkg"
+  "%{dev}%"
+  "--with-webs"
+  "%{webs:installed}%"
+]
+dev-repo: "git+https://erratique.ch/repos/hc.git"

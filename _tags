@@ -2,7 +2,7 @@ true : bin_annot, safe_string
 
 <_b0> : -traverse
 <src> : include
-<src/hc.*> : package(webs webs.html)
+<src/hc.*> : package(webs htmlit)
 <src/hc_page.*> : package(brr)
 <src/hc_page_init.*> : no_check_prims, package(brr)
-<examples/*> : thread, package(webs webs.cli webs.httpc webs.unix webs.html)
+<examples/*> : thread, package(webs webs.unix webs.cli htmlit)

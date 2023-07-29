@@ -4,14 +4,14 @@
   ---------------------------------------------------------------------------*)
 
 open Webs
-open Webs_html
+open Htmlit
 
 module type T = sig
   val id : string
   val name : string
   val synopsis : string
   val prefix : string
-  val serve : Http.req -> (Http.resp, Http.resp) result
+  val serve : Http.Request.t -> (Http.Response.t, Http.Response.t) result
 end
 
 val page : ?style:string -> id:string -> title:string -> El.html list -> string
@@ -30,12 +30,15 @@ val input_field :
 val field : ?at:At.t list -> El.html list -> El.html
 
 type urlf
-val urlf : Http.req -> urlf
+val urlf : Http.Request.t -> urlf
 val uf : urlf -> ('a, unit, string, string) format4 -> 'a
 
-val req_decode : Http.req -> (Http.req -> 'a) -> ('a, Http.resp) result
+val req_decode :
+  Http.Request.t -> (Http.Request.t -> 'a) -> ('a, Http.Response.t) result
+
 val req_decode_query :
-  Http.req -> (Http.req -> Http.query -> 'a) -> ('a, Http.resp) result
+  Http.Request.t -> (Http.Request.t -> Http.Query.t -> 'a) ->
+  ('a, Http.Response.t) result
 
 val starts_with : prefix:string -> string -> bool
 

@@ -4,7 +4,7 @@
   ---------------------------------------------------------------------------*)
 
 open Webs
-open Webs_html
+open Htmlit
 
 let ( let* ) = Result.bind
 let strf = Printf.sprintf
@@ -70,24 +70,25 @@ let index urlf =
 
 let show_bookmark_table r =
   let urlf = Example.urlf r in
-  let* `GET = Http.Req.allow Http.Meth.[get] r in
-  let* q = Http.Req.to_query r in
-  let* page = match Http.Query.find "page" q with
+  let* `GET = Http.Request.allow Http.Method.[get] r in
+  let* q = Http.Request.to_query r in
+  let* page = match Http.Query.find_first "page" q with
   | None -> Ok None
   | Some page ->
       try Ok (Some (int_of_string page)) with
-      | Failure e -> Error (Http.Resp.v ~explain:e Http.bad_request_400)
+      | Failure e ->
+          Error (Http.Response.empty ~explain:e Http.Status.bad_request_400)
   in
   match page with
-  | None -> Ok (Http.Resp.html Http.ok_200 (index urlf))
+  | None -> Ok (Http.Response.html Http.Status.ok_200 (index urlf))
   | Some page_num ->
       match bookmark_page_rows urlf page_num with
-      | [] -> Http.Resp.not_found_404 ()
-      | ps -> Ok (Http.Resp.html Http.ok_200 (Example.part ps))
+      | [] -> Http.Response.not_found_404 ()
+      | ps -> Ok (Http.Response.html Http.Status.ok_200 (Example.part ps))
 
-let serve r = match Http.Req.path r with
+let serve r = match Http.Request.path r with
 | [""] -> show_bookmark_table r
-| p -> Http.Resp.not_found_404 ()
+| p -> Http.Response.not_found_404 ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The hc programmers
