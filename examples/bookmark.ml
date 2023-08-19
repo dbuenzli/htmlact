@@ -1,5 +1,5 @@
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers. All rights reserved.
+   Copyright (c) 2021 The htmlact programmers. All rights reserved.
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
@@ -44,7 +44,7 @@ let init () =
 let () = init ()
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers
+   Copyright (c) 2021 The htmlact programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above

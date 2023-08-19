@@ -1,5 +1,5 @@
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers. All rights reserved.
+   Copyright (c) 2021 The htmlact programmers. All rights reserved.
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
@@ -22,8 +22,8 @@ let style = {css|
 .record div + div { margin-top: var(--size-fourth-line); }
 .record div:last-child { margin-top: var(--size-half-line); }
 
-form.hc-out, .record input { transition: all var(--dur-short); }
-.hc-in input.field, .hc-out input.field { background: white; }
+form.htmlact-out, .record input { transition: all var(--dur-short); }
+.htmlact-in input.field, .htmlact-out input.field { background: white; }
 |css}
 
 let field_label n = El.label [El.txt n]
@@ -33,8 +33,9 @@ let input_field = Example.input_field
 
 let view urlf b =
   let edit_button urlf b =
-    let r = Hc.request (Example.uf urlf "bookmark/%d/editor" b.Bookmark.id) in
-    let t = Hc.target ".record:up" and e = Hc.effect `Element in
+    let url = Example.uf urlf "bookmark/%d/editor" b.Bookmark.id in
+    let r = Htmlact.request url in
+    let t = Htmlact.target ".record:up" and e = Htmlact.effect `Element in
     Example.button ~at:[r; t; e] "Edit"
   in
   let at = [At.class' "record"] in
@@ -46,12 +47,12 @@ let view urlf b =
 
 let editor_view urlf b =
   let cancel_button urlf b =
-    let r = Hc.request (Example.uf urlf "bookmark/%d" b.Bookmark.id) in
-    let t = Hc.target ".record:up" and e = Hc.effect `Element in
+    let r = Htmlact.request (Example.uf urlf "bookmark/%d" b.Bookmark.id) in
+    let t = Htmlact.target ".record:up" and e = Htmlact.effect `Element in
     Example.button ~at:[r; t; e] "Cancel"
   in
-  let r = Hc.request ~meth:`PUT (Example.uf urlf "bookmark/%d" b.Bookmark.id) in
-  let e = Hc.effect `Element in
+  let r = Htmlact.request ~meth:`PUT (Example.uf urlf "bookmark/%d" b.Bookmark.id) in
+  let e = Htmlact.effect `Element in
   El.form ~at:[At.class' "record"; r; e] [
     El.div [ field_label "Name"; El.sp;
              input_field ~name:"name" ~type':"text" b.Bookmark.name ];
@@ -103,7 +104,7 @@ let serve r = match Http.Request.path r with
 | p -> Http.Response.not_found_404 ()
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers
+   Copyright (c) 2021 The htmlact programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above

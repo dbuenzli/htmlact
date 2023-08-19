@@ -2,7 +2,7 @@
 
 {1:request Request elements}
 
-The idea behind [Hc] is to allow any HTML element to perform requests
+The idea behind [htmlact] is to allow any HTML element to perform requests
 on the server for HTML fragments. These requests are specified via the
 {{!data_request}[data-request]} attribute. We call {e request
 elements}, elements that bear such an attribute.
@@ -27,7 +27,7 @@ Each request element defines a connection cycle in which a few other
 elements take part. All these other elements are always defined via
 attributes of the request element. They can all point to the same
 element. In particular if they are not specified they mostly default
-to the request element.
+to the request element itself.
 
 {ul
 {- The {e request} element. This is the element that has the
@@ -39,15 +39,15 @@ to the request element.
    [data-event]} attribute triggers the request.}
 {- The {e query} elements, specified by the {{!data_query}[data-query]}
    attribute. These are the element that are looked up to devise the
-   request's query data (in the request URL for [GET] and [HEAD], in
-   the body otherwise).}
+   request's query data (transmitted in the request URL for [GET] and [HEAD],
+   or in the body for other methods).}
 {- The {e target} element. This is the element specified by the
    {{!data_target}[data-target]} attribute. It specifies the
    relative location of the request response effect, that is where
    and how the HTML fragment from the server gets inserted in the page.}
 {- The {e feedback} element(s), specified by {{!data_feedback}[data-feedback]}.
    These are additional elements on which the connection cycle is feedback
-   using classes.}}
+   using CSS classes.}}
 
 Every request element on the page cycle through the following steps.
 
@@ -59,31 +59,31 @@ Every request element on the page cycle through the following steps.
    {{!data_feedback}feedback} {e element(s)}.}
 {- Perform the request with the {{:data_query}query}. Redirections
    are followed. The request and feedback elements get classified
-   as [hc-request]}
+   as [htmlact-request]}
 {- Wait for the response. If an error occurs classify
-   the request and feedback elements with [hc-error] and stop here.
-   Otherwise unclassify [hc-request] and proceed. }
+   the request and feedback elements with [htmlact-error] and stop here.
+   Otherwise unclassify [htmlact-request] and proceed. }
 {- Process any {{!response_headers}special header} in the response. This
    may stop the cycle here (e.g. on {{!header_reload}reload} or
    {{!header_redirect}redirect}).}
 {- Using the HTML fragment found in the server response, perform the
    {{:data_effect}effect} on the {{:data_target}target}. If elements
    are being removed from the page, they first get classified with
-   {{!class_hc_out}[hc-out]} for a while before being effectively removed.
-   Elements that are introduced get transiently classified with
-   {{!class_hc_in}[hc-in].}}
+   {{!class_htmlact_out}[htmlact-out]} for a while before being effectively
+   removed. Elements that are introduced get transiently classified with
+   {{!class_htmlact_in}[htmlact-in].}}
 {- If the request is:
    {ul
-   {- a websocket, loop to 1 with the same socket.}
-   {- SSE connection, loop to 4.}
+   {- A websocket, loop to 1 with the same socket.}
+   {- An SSE connection, loop to 4.}
    {- Otherwise loop to 1 (if the element still exists
-      after the effect)}}}}
+      after the effect).}}}}
 
 {1:css_class_feedback CSS class feedback}
 
 The following classes can be used to track the connection cycle.
 
-{2:class_hc_request [hc-request]}
+{2:class_htmlact_request [htmlact-request]}
 
 This class is applied on the {{!data_request}request element} and the
 {{!data_feedback}feedback element(s)} whenever a request to the server
@@ -96,56 +96,60 @@ is taking longer than 500ms.
 
 {v
 .spinner { visibility: hidden; }
-.hc-request .spinner { animation: spin 1s linear 500ms infinite; }
+.htmlact-request .spinner { animation: spin 1s linear 500ms infinite; }
 
 @keyframes spin
 { from { visibility: visible; } to { transform: rotate(360deg); }}
 v}
 
-{2:class_hc_error [hc-error]}
+{2:class_htmlact_error [htmlact-error]}
 
 This class is applied on the {{!data_request}request element} and
 the {{!data_feedback}feedback element} whenever a request failed.
-This includes if the request returns a 4XX or 5XX result.
+This includes if the request returns a 4XX or 5XX response.
 
-{2:class_hc_in [hc-in] and [hc-in-parent]}
+{2:class_htmlact_in [htmlact-in] and [htmlact-in-parent]}
 
 These classes are applied for a small amount of time (one render
-frame) when the {{!data_effect}effect} is performed. [hc-in] is
-applied on the root of HTML trees that are inserted in the DOM by the
-effect. [hc-in-parent] is applied on their parent.
+frame) when the {{!data_effect}effect} is performed:
+{ul
+{- [htmlact-in] is applied on the root of HTML trees that are inserted
+   in the DOM by the effect.}
+{- [htmlact-in-parent] is applied on their parent.}}
 
 These classes are used to trigger CSS animations. For example to fade
 in an element in 250ms on insertion use:
 
 {v
-.my-element.hc-in { opacity: 0; }
+.my-element.htmlact-in { opacity: 0; }
 .my-element { opacity: 1; transition: opacity 250ms; }
 v}
 
-{2:class_hc_out [hc-out] and [hc-out-parent]}
+{2:class_htmlact_out [htmlact-out] and [htmlact-out-parent]}
 
 These classes are applied on elements (if any) that are removed by the
-{{!data_effect}effect} just before it is performed.  [hc-out] is
-applied on elements that will be removed. [hc-out-parent] is on their
-parent.
+{{!data_effect}effect} just before it is performed:
+{ul
+{- [htmlact-out] is applied on elements that will be removed.}
+{- [htmlact-out-parent] is on their parent.}}
 
 To determine the amount of time during which the classes are applied
 before the effect is performed, first the classes are applied on the
 elements. Then for each of these elements we take the maximum value of
-either CSS attribute [--hc-out-duration], [animation-duration] or
+either CSS attribute [--htmlact-out-duration], [animation-duration] or
 [transition-duration]. The maximal value of all these durations defines
 the duration.
 
 If the elements animating are descendent of those that are classified
-by [hc-out] or [hc-out-parent], use the [--hc-out-duration] attribute
-on the [.hc-out] elements to set the time needed. For example the
-following ensures that the [hc-out] and [hc-out-parent] classes are
+by [htmlact-out] or [htmlact-out-parent], use the
+[--htmlact-out-duration] attribute on the [.htmlact-out] elements to set
+the time needed. For example the
+following ensures that the [htmlact-out] and [htmlact-out-parent] classes are
 maintained on the elements to be removed for 500ms before being
 effectively removed:
 
 {v
-.hc-out { --hc-out-duration: 500ms }
+.htmlact-out { --htmlact-out-duration: 500ms }
 v}
 
 {1:attref Attribute reference}
@@ -225,6 +229,7 @@ modifiers for the event:
    [false] the event did not occur.}}
 
 If the attribute is unspecified this is:
+
 {ul
 {- [submit] for [form] elements.}
 {- [change] for [input], [textarea] and [select].}
@@ -245,8 +250,8 @@ on which the {{!data_request}request} response performs its
 
 {2:data_effect [data-effect="<eff>"]}
 
-The value [<eff>] determines the way the HTML response is used on
-the {{!data_target}target}. This can be:
+The value [<eff>] determines the way the HTML response is used on the
+{{!data_target}target}. This can be:
 
 {ul
 {- [children] to replaces the children of the target (default).}
@@ -265,11 +270,12 @@ If unspecified this is [children].
 
 DOM elements in addition to {{!data_target}target element} on which
 the connection cycle is feedback with
-{{!class_hc_request}[hc-request]} and {{!class_hc_error}[hc-error]}.
+{{!class_htmlact_request}[htmlact-request]} and
+{{!class_htmlact_error}[htmlact-error]}.
 
 {1:selector Selector syntax}
 
-Attributes of [hc] use
+Attributes of [htmlact] use
 {{:https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors}CSS
 selectors} with
 {{:https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector}
@@ -320,42 +326,43 @@ The server should respond with an HTML fragment to be inserted with
 respect to the {{!data_target}request target}. Additionally it can use
 the headers described next to control the client.
 
-{2:header_redirect [hc-redirect: <url>]}
+{2:header_redirect [htmlact-redirect: <url>]}
 
-Redirects the page to [<url>]. The body of the response is ignored by [Hc].
+Redirects the page to [<url>]. The body of the response is ignored by
+[htmlact] page driver.
 
-{2:header_reload [hc-reload: true]}
+{2:header_reload [htmlact-reload: true]}
 
-Reloads the page. The body of the response is igored by [Hc].
+Reloads the page. The body of the response is igored by the [htmlact]
+page driver.
 
-{2:header_location_push [hc-location-push: <url>]}
+{2:header_location_push [htmlact-location-push: <url>]}
 
 Pushes location [<url>] on the history stack.
 
-{2:header_location_replace [hc-location-replace: <url>]}
+{2:header_location_replace [htmlact-location-replace: <url>]}
 
 Replaces current location by [<url>] (without reloading). Has no effect
-if {{!header_location_push}[hc-location-push]} is present.
+if {{!header_location_push}[htmlact-location-push]} is present.
 
-{2:header_location_title [hc-location-title: <pct-title>]}
+{2:header_location_title [htmlact-location-title: <pct-title>]}
 
-Replaces the current title by percent encoded title [<pct-title>].
-Mostly used in conjunction with {{!header_location_push}[hc-location-push]}
-or {{!header_location_replace}[hc-location-replace]}.
+Replaces the current title by the percent encoded title [<pct-title>].
+Mostly used in conjunction with {{!header_location_push}[htmlact-location-push]}
+or {{!header_location_replace}[htmlact-location-replace]}.
 
 {1:request_headers Request HTTP headers}
 
-{2:header_hc [hc: true]}
+{2:header_htmlact [htmlact: true]}
 
-Indicates the request is made by [Hc].
+Indicates the request is made by the [htamlact] page driver.
 
 {2:header_referer [referer: <url>]}
 
 This is the standard HTTP [referer] header, it indicates the URL of
-the page (without the fragment) that performs the request. [hc] makes
+the page (without the fragment) that performs the request. [htmlact] makes
 requests with the
-{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#directives}
-[same-origin]} policy.
+{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#directives}[same-origin]} policy.
 
 If your HTML fragment returns relative URLs they will be interpreted
 relative to [<url>] once they are injected in the DOM.

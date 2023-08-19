@@ -9,26 +9,27 @@ let webs_cli = B0_ocaml.libname "webs.cli"
 let webs_unix = B0_ocaml.libname "webs.unix"
 let htmlit = B0_ocaml.libname "htmlit"
 
-let hc = B0_ocaml.libname "hc"
-let hc_page = B0_ocaml.libname "hc.page"
+let htmlact = B0_ocaml.libname "htmlact"
+let htmlact_page = B0_ocaml.libname "htmlact.page"
 
 (* Libraries *)
 
-let hc_lib =
-  let srcs = Fpath.[ `File (v "src/hc.mli"); `File (v "src/hc.ml") ] in
+let htmlact_lib =
+  let srcs = [ `Dir (Fpath.v "src") ] in
   let requires = [webs; htmlit] in
-  B0_ocaml.lib hc ~doc:"Hc library" ~srcs ~requires
+  B0_ocaml.lib htmlact ~doc:"htmlact library" ~srcs ~requires
 
-let hc_page_lib =
-  let srcs = Fpath.[ `File (v "src/hc_page.mli"); `File (v "src/hc_page.ml")] in
+let htmlact_page_lib =
+  let srcs = [ `Dir (Fpath.v "src/page")] in
   let requires = [brr] in
-  B0_ocaml.lib hc_page ~doc:"Web page driver library" ~srcs ~requires
+  B0_ocaml.lib htmlact_page ~doc:"Webpage driver library" ~srcs ~requires
 
-let hc_page_js =
-  let srcs = Fpath.[ `File (v "src/hc_page_init.ml"); ] in
-  let requires = [hc_page] in
+let htmlact_page_js =
+  let srcs = [`Dir (Fpath.v "src/standalone")] in
+  let requires = [htmlact_page] in
   let meta = B0_jsoo.meta ~requires () in
-  B0_jsoo.exe "hc-page.js" ~meta ~srcs
+  let doc = "Self-contained webpage driver" in
+  B0_jsoo.exe "htmlact-page.js" ~doc ~meta ~srcs
 
 (* Examples *)
 
@@ -48,14 +49,14 @@ let serve_reload b u ~args = match B0_unit.get_meta B0_meta.exe_file u with
     let code = match st with `Exited c -> c | `Signaled c -> 128 + c in
     Ok (Os.Exit.code code)
 
-let hc_examples =
-  let doc = "Hc examples" in
-  let requires = [ hc; webs; webs_cli; webs_unix; htmlit] in
+let htmlact_examples =
+  let doc = "Htmlact examples" in
+  let requires = [ htmlact; webs; webs_cli; webs_unix; htmlit] in
   let srcs = Fpath.[ `Dir (v "examples"); ] in
   let meta = B0_meta.(empty |> add B0_ocaml.Meta.supported_code `Native) in
-  let wrap proc b = B0_build.require b hc_page_js; proc b in
+  let wrap proc b = B0_build.require b htmlact_page_js; proc b in
   let action = serve_reload in
-  B0_ocaml.exe "hc-examples" ~wrap ~doc ~srcs ~requires ~action ~meta
+  B0_ocaml.exe "htmlact-examples" ~wrap ~doc ~srcs ~requires ~action ~meta
 
 (* Packs *)
 
@@ -63,28 +64,29 @@ let default =
   let meta =
     let open B0_meta in
     empty
-    |> add authors ["The hc programmers"]
+    |> add authors ["The htmlact programmers"]
     |> add maintainers ["Daniel Bünzli <daniel.buenzl i@erratique.ch>"]
-    |> add homepage "https://erratique.ch/software/hc"
-    |> add online_doc "https://erratique.ch/software/hc/doc"
+    |> add homepage "https://erratique.ch/software/htmlact"
+    |> add online_doc "https://erratique.ch/software/htmlact/doc"
     |> add licenses ["ISC"]
-    |> add repo "git+https://erratique.ch/repos/hc.git"
-    |> add issues "https://github.com/dbuenzli/hc/issues"
-    |> add description_tags ["front-end"; "ui"; "html"; "org:erratique"; ]
+    |> add repo "git+https://erratique.ch/repos/htmlact.git"
+    |> add issues "https://github.com/dbuenzli/htmlact/issues"
+    |> add description_tags
+      ["front-end"; "ui"; "html"; "web"; "org:erratique"; ]
     |> add B0_opam.Meta.build
       {|[["ocaml" "pkg/pkg.ml" "build" "--dev-pkg" "%{dev}%"
-           "--with-webs" "%{webs:installed}%"]]|}
+           "--with-webs" "%{webs:installed}%"
+           "--with-htmlit" "%{htmlit:installed}%"]]|}
     |> add B0_opam.Meta.depends [
       "ocaml", {|>= "4.08.0"|};
       "ocamlfind", {|build|};
       "ocamlbuild", {|build|};
       "topkg", {|build & >= "1.0.3"|};
       "brr", "";
-      "webs", "";
-      "htmlit", "";
       "js_of_ocaml-compiler", {|>= "3.7.1"|};
     ]
+    |> add B0_opam.Meta.depopts [ "webs", ""; "htmlit", ""]
     |> tag B0_opam.tag
   in
-  B0_pack.v "default" ~doc:"hc package" ~meta ~locked:true @@
+  B0_pack.v "default" ~doc:"htmlact package" ~meta ~locked:true @@
   B0_unit.list ()

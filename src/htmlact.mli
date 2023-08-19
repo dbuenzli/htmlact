@@ -1,14 +1,14 @@
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers. All rights reserved.
+   Copyright (c) 2021 The htmlact programmers. All rights reserved.
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
-(** Hc HTML generation and HTTP headers for {!Webs} and {!Htmlit}
+(** Htmlact HTML generation and HTTP headers.
 
-    These function help generate Hc {{!page-manual.attref}data
-    attributes} and {{!page-manual.responses}HTTP headers} with
-    {!Webs} and {!Webs_html}. Ignore if you are using something else
-    to generate your HTML. *)
+    These function help generate [htmlact] {{!page-manual.attref}data
+    attributes} and {{!page-manual.response_headers}HTTP headers} with
+    {!Htmlit} and {!Webs}. Ignore if you are using something else to
+    generate your HTML. *)
 
 open Webs
 open Htmlit
@@ -108,37 +108,37 @@ end
 
 (** {2:requests Requests} *)
 
-val hc : Webs.Http.Headers.Name.t
-(** [hc] is the {{!page-manual.header_hc}[hc]} header. *)
+val htmlact : Webs.Http.Headers.Name.t
+(** [htmlact] is the {{!page-manual.header_htmlact}[htmlact]} header. *)
 
 (** {2:responses Responses} *)
 
 val redirect : Webs.Http.Headers.Name.t
-(** [redirect] is the {{!page-manual.header_redirect}[hc-redirect]}
+(** [redirect] is the {{!page-manual.header_redirect}[htmlact-redirect]}
     header. *)
 
 val reload : Webs.Http.Headers.Name.t
-(** [reload] is the {{!page-manual.header_reload}[hc-reload]} header. *)
+(** [reload] is the {{!page-manual.header_reload}[htmlact-reload]} header. *)
 
 val location_push : Webs.Http.Headers.Name.t
 (** [location_push] is the {{!page-manual.header_location_push}
-    [hc-location-push]} header. *)
+    [htmlact-location-push]} header. *)
 
 val location_replace : Webs.Http.Headers.Name.t
 (** [location_replace] is the
-    {{!page-manual.header_location_replace}[hc-location-replace]}
+    {{!page-manual.header_location_replace}[htmlact-location-replace]}
     header. *)
 
 val location_title : Webs.Http.Headers.Name.t
 (** [location_title] is the
-    {{!page-manual.header_location_title}[hc-location-title]} header. *)
+    {{!page-manual.header_location_title}[htmlact-location-title]} header. *)
 
 val encode_location_title : string -> string
 (** [encode_locationt_title s] encodes [s] for the {!location_title}
     headers. *)
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers
+   Copyright (c) 2021 The htmlact programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above

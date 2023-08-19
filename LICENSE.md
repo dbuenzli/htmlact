@@ -1,4 +1,4 @@
-Copyright (c) 2021 The hc programmers
+Copyright (c) 2021 The htmlact programmers
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above

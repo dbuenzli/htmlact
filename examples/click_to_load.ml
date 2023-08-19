@@ -1,5 +1,5 @@
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers. All rights reserved.
+   Copyright (c) 2021 The htmlact programmers. All rights reserved.
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
@@ -33,7 +33,9 @@ tr td:nth-child(1) { width:15%; }
 tr td:nth-child(2) { width:85%; }
 tr.broken td:nth-child(1) { color: rgb(var(--redish)); }
 
-tr.hc-in { opacity: 0; transform: translateY(calc(-1 * var(--size-half-line))) }
+tr.htmlact-in
+{ opacity: 0; transform: translateY(calc(-1 * var(--size-half-line))) }
+
 tr { transition: all var(--dur-short); }
 |css}
 
@@ -44,8 +46,8 @@ let bookmark_row b =
       El.td [El.a ~at:At.[href b.Bookmark.link] [El.txt b.Bookmark.name]]]
 
 let load_next urlf n =
-  let r = Hc.request ~meth:`GET (Example.uf urlf "?page=%d" n) in
-  let t = Hc.target "tr:up" and e = Hc.effect `Element in
+  let r = Htmlact.request ~meth:`GET (Example.uf urlf "?page=%d" n) in
+  let t = Htmlact.target "tr:up" and e = Htmlact.effect `Element in
   let more = Example.button ~at:[r; t; e] "More…" in
   El.tr [El.td ~at:At.[int "colspan" 3] [more]]
 
@@ -91,7 +93,7 @@ let serve r = match Http.Request.path r with
 | p -> Http.Response.not_found_404 ()
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers
+   Copyright (c) 2021 The htmlact programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above

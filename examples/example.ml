@@ -1,5 +1,5 @@
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers. All rights reserved.
+   Copyright (c) 2021 The htmlact programmers. All rights reserved.
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
@@ -14,16 +14,18 @@ module type T = sig
   val serve : Http.Request.t -> (Http.Response.t, Http.Response.t) result
 end
 
-let src_root = "https://erratique.ch/repos/hc/tree/examples/"
+let src_root = "https://erratique.ch/repos/htmlact/tree/examples/"
 
 let link ~href:r text = El.a ~at:At.[href r] [El.txt text]
 
 let inline_style s = El.style [El.unsafe_raw s]
 
 let page ?style ~id ~title:t content =
-  let root = String.equal t "Hc examples" in
-  let title = if not root then Printf.sprintf "%s – Hc examples" t else t in
-  let scripts = ["/hc-page.js"] in
+  let root = String.equal t "Htmlact examples" in
+  let title =
+    if not root then Printf.sprintf "%s – Htmlact examples" t else t
+  in
+  let scripts = ["/htmlact-page.js"] in
   let more_head =
     let more_style = Option.fold ~none:El.void ~some:inline_style style in
     El.splice [ inline_style Style.base; more_style ]
@@ -99,7 +101,7 @@ let starts_with ~prefix s =
   loop 0
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers
+   Copyright (c) 2021 The htmlact programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above

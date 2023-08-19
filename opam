@@ -1,28 +1,28 @@
 opam-version: "2.0"
-name: "hc"
-synopsis: "Hypertext connection for dynamic web pages"
+name: "htmlact"
+synopsis: "Active HTML elements for dynamic webpages"
 description: """\
-Hc declares dynamic web pages by using HTML data attributes to
+Htmlact declares dynamic webpages by using HTML data attributes to
 seamlessly update the page with HTML fragments requested from the
 server.
 
-Using hypertext as the interaction substrate keeps logic on the server
-and, in the simplest cases, reduces front-end client code to custom
-CSS animations and inclusion of a generic JavaScript driver.
+Using HTML as the interaction substrate keeps logic on the server and,
+in the simplest cases, reduces front-end client code to custom CSS
+animations and inclusion of a generic JavaScript driver.
 
-Hc is distributed under the ISC license. Compilation of the JavaScript
-driver depends on [brr][brr].
+Htmlact is distributed under the ISC license. Compilation of the 
+JavaScript driver depends on [brr].
 
-Homepage: https://erratique.ch/software/hc
+Homepage: https://erratique.ch/software/htmlact
 
 [brr]: https://erratique.ch/software/brr"""
 maintainer: "Daniel Bünzli <daniel.buenzl i@erratique.ch>"
-authors: "The hc programmers"
+authors: "The htmlact programmers"
 license: "ISC"
-tags: ["front-end" "ui" "html" "org:erratique"]
-homepage: "https://erratique.ch/software/hc"
-doc: "https://erratique.ch/software/hc/doc"
-bug-reports: "https://github.com/dbuenzli/hc/issues"
+tags: ["front-end" "ui" "html" "web" "org:erratique"]
+homepage: "https://erratique.ch/software/htmlact"
+doc: "https://erratique.ch/software/htmlact/doc"
+bug-reports: "https://github.com/dbuenzli/htmlact/issues"
 depends: [
   "ocaml" {>= "4.08.0"}
   "ocamlfind" {build}
@@ -42,4 +42,4 @@ build: [
   "--with-webs"
   "%{webs:installed}%"
 ]
-dev-repo: "git+https://erratique.ch/repos/hc.git"
+dev-repo: "git+https://erratique.ch/repos/htmlact.git"

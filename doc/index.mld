@@ -1,23 +1,24 @@
-{0 Hc {%html: <span class="version">%%VERSION%%</span>%}}
+{0 Htmlact {%html: <span class="version">%%VERSION%%</span>%}}
 
-Hc declares dynamic web pages by using HTML data attributes to
+Htmlact declares dynamic webpages by using HTML data attributes to
 seamlessly update the page with HTML fragments requested from the
 server.
 
-Using hypertext as the interaction substrate keeps logic on the server
+Using HTML as the interaction substrate keeps logic on the server
 and, in the simplest cases, reduces front-end client code to custom
-CSS animations and an invocation of the {!Hc_page.init} function.
+CSS animations and an invocation of the {!Htmlact_page.init} function
+or adding the [htmlact-page.js] script to your page.
 
-[hc] was inspired by {{:https://htmx.org/}htmx}.
+Htmlact was inspired by {{:https://htmx.org/}htmx}.
 
 {1:quick_start Quick start}
 
 If you really do not want to write a single line of front-end code,
-include the page [$(opam var share)/hc/hc-page.js] in your page. Now
+include the page [$(opam var share)/htmlact/htmlact-page.js] in your page. Now
 the following:
 
 {v
-<script type="text/javascript" defer src="hc-page.js"></script>
+<script type="text/javascript" defer src="htmlact-page.js"></script>
 <button data-request="POST /clicked"
         data-effect="element">Replace me</button>
 v}
@@ -25,31 +26,41 @@ v}
 instructs a click on the button to perform a POST request to
 [/clicked] and replace the button with the HTML response. That's it.
 
-If you installed [hc] with tests ([opam install -t hc]). The
-[hc-examples] binary serves a few interaction examples.
+If you installed [htmlact] with tests ([opam install -t htmlact]). The
+[htamlct-examples] binary serves a few interaction examples and links
+to their sources.
 
 {1:manuals Manuals}
 
 {ul
 {- The {{!page-manual}manual} explains it all.}}
 
-{1:api API}
+{1:library_htmlact Library [htmlact]}
+
+That's not strictly needed. Only if you use {!Webs} and {!Htmlit}.
 
 {!modules:
-Hc
-Hc_page
+Htmlact}
+
+{1:library_htmlact_page Library [htmlact.page]}
+
+That's not srictly needed either. You can instead add the [htmlact-page.js]
+script to your page.
+
+{!modules:
+Htmlact_page
 }
 
 {1:todo TODO}
 
 {ul
-{- Review animation interaction for hc-in, it's not so
+{- Review animation interaction for htmlact-in, it's not so
    good to have transition on bare elements which
-   are triggered according to .hc-in -> bare}
-{- Provide and trigger events for [Hc] behaviour itself, this
-   allows to chain [Hc] connections in interesting ways and
+   are triggered according to .htmlact-in -> bare}
+{- Provide and trigger events for [Htmlact] behaviour itself, this
+   allows to chain [Htmlact] connections in interesting ways and
    helps coordinating with other front end code.
-   {b Update.} Something was hastily added in {!Hc.Ev}.
+   {b Update.} Something was hastily added in {!Htmlact.Ev}.
    needs proper design and documentation.}
 {- Because of resource costs we likely want something like
    multi-target response updates for SSE and websockets. Also
@@ -77,7 +88,7 @@ Hc_page
    Provide local substitution.}
 {- We likely want to expose the dom effecting stuff (for now
    exposed hastily for hyperbib and undocumented), make a nice
-   api and let [hc] use it.}
+   api and let [htmlact] use it.}
 {- Allow to tweak the
    {{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy}
     [Referrer-Policy]} for requests. For now we use [same-origin]. Possibly

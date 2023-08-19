@@ -1,10 +1,10 @@
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers. All rights reserved.
+   Copyright (c) 2021 The htmlact programmers. All rights reserved.
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
 let base = {css|
-/*   Copyright (c) 2021 The hc programmers. All rights reserved. */
+/*   Copyright (c) 2021 The htmlact programmers. All rights reserved. */
 
 *, *::before, *::after
 { box-sizing: border-box; margin:0; padding:0;
@@ -132,10 +132,10 @@ input.field
 .button span { pointer-events: none; }
 
 .button:active { background-color: #9cb1c9; }
-.button:disabled, .button.hc-request
+.button:disabled, .button.htmlact-request
  { border: solid 1px #888; background-color:#AAA; color:#555; }
 
-.hc-request .spinner + span { filter: blur(0.5px); opacity: 0.5; }
+.htmlact-request .spinner + span { filter: blur(0.5px); opacity: 0.5; }
 
 .button .spinner
 { visibility: hidden;
@@ -145,7 +145,7 @@ input.field
   border: solid 3px white; border-bottom-color: black; border-radius: 50%;
   opacity: 0.5; }
 
-.hc-request .spinner
+.htmlact-request .spinner
 { animation: spin var(--dur-long) linear var(--dur-long) infinite; }
 
 @keyframes spin
@@ -153,7 +153,7 @@ input.field
 |css}
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers
+   Copyright (c) 2021 The htmlact programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above

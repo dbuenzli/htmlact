@@ -1,5 +1,5 @@
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers. All rights reserved.
+   Copyright (c) 2021 The htmlact programmers. All rights reserved.
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
@@ -24,8 +24,8 @@ tr td:nth-child(2) { width:20%; }
 tr td:nth-child(3) { width:75%; }
 tr.broken td:nth-child(2) { color: rgb(var(--redish)); }
 
-.hc-in tr.updated.broken { background: rgba(var(--redish), 0.1); }
-.hc-in tr.updated.alive { background: rgba(var(--greenish), 0.1); }
+.htmlact-in tr.updated.broken { background: rgba(var(--redish), 0.1); }
+.htmlact-in tr.updated.alive { background: rgba(var(--greenish), 0.1); }
 tr { transition: all 1s; }
 |css}
 
@@ -51,9 +51,10 @@ let table_view ?updated bs =
       El.tbody (List.map (selectable_bookmark ?updated) bs)]]
 
 let actions urlf =
-  let act a = Hc.request ~meth:`PUT (Example.uf urlf "?action=%s" a) in
+  let act a = Htmlact.request ~meth:`PUT (Example.uf urlf "?action=%s" a) in
   let t = ":up :up form" in
-  let t = Hc.target t and q = Hc.query t and e =  Hc.effect `Element in
+  let t = Htmlact.target t and q = Htmlact.query t in
+  let e = Htmlact.effect `Element in
   let alive = Example.button ~at:[act "set-alive"; t; e; q] "Set alive" in
   let broken = Example.button ~at:[act "set-broken"; t; e; q] "Set broken" in
   El.div [alive; broken]
@@ -100,7 +101,7 @@ let serve r = match Http.Request.path r with
 | p -> Http.Response.not_found_404 ()
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers
+   Copyright (c) 2021 The htmlact programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above

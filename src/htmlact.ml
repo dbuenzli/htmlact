@@ -1,5 +1,5 @@
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers. All rights reserved.
+   Copyright (c) 2021 The htmlact programmers. All rights reserved.
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
@@ -63,16 +63,16 @@ end
 
 (* Headers *)
 
-let hc = Http.Headers.name "hc"
-let redirect = Http.Headers.name "hc-redirect"
-let reload = Http.Headers.name "hc-reload"
-let location_push = Http.Headers.name "hc-location-push"
-let location_replace = Http.Headers.name "hc-location-replace"
-let location_title = Http.Headers.name "hc-location-title"
+let htmlact = Http.Headers.name "htmlact"
+let redirect = Http.Headers.name "htmlact-redirect"
+let reload = Http.Headers.name "htmlact-reload"
+let location_push = Http.Headers.name "htmlact-location-push"
+let location_replace = Http.Headers.name "htmlact-location-replace"
+let location_title = Http.Headers.name "htamlact-location-title"
 let encode_location_title = Http.Pct.encode `Uri
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers
+   Copyright (c) 2021 The htmlact programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above

@@ -1,5 +1,5 @@
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers. All rights reserved.
+   Copyright (c) 2021 The htmlact programmers. All rights reserved.
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
@@ -22,7 +22,7 @@ let description = Example.description [ El.div [El.txt
 let style = {css|
 @keyframes spin { from { visibility: visible; opacity:0 } to { opacity:1 }}
 .spinner { visibility: hidden; }
-.spinner.hc-request
+.spinner.htmlact-request
 { animation: spin var(--dur-medium) ease var(--dur-short) infinite alternate; }
 |css}
 
@@ -47,9 +47,10 @@ let autocomplete_options r =
 let bookmark_name_input urlf =
   let list_id = "titles" in
   let input =
-    let r = Hc.request ~meth:`POST (Example.uf urlf "") in
-    let t = Hc.target (":up #" ^ list_id) and f = Hc.feedback ":up .spinner" in
-    let e = Hc.event ~debounce_ms:500 "input" in
+    let r = Htmlact.request ~meth:`POST (Example.uf urlf "") in
+    let t = Htmlact.target (":up #" ^ list_id) in
+    let f = Htmlact.feedback ":up .spinner" in
+    let e = Htmlact.event ~debounce_ms:500 "input" in
     let at =
       At.[ class' "field"; name "title"; type' "search"; int "size" 25;
            v "list" list_id; autocomplete "off"; autofocus;
@@ -80,7 +81,7 @@ let serve r = match Http.Request.path r with
 | p -> Http.Response.not_found_404 ()
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers
+   Copyright (c) 2021 The htmlact programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above

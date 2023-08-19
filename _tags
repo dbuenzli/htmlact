@@ -1,8 +1,13 @@
 true : bin_annot, safe_string
 
 <_b0> : -traverse
+
 <src> : include
-<src/hc.*> : package(webs htmlit)
-<src/hc_page.*> : package(brr)
-<src/hc_page_init.*> : no_check_prims, package(brr)
+<src/htmlact.*> : package(webs htmlit)
+
+<src/page> : include
+<src/page/htmlact_page.*> : package(brr)
+
+<src/standalone> : include
+<src/standalone/htmlact_page_init.*> : no_check_prims, package(brr)
 <examples/*> : thread, package(webs webs.unix webs.cli htmlit)

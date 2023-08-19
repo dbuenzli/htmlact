@@ -1,5 +1,5 @@
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers. All rights reserved.
+   Copyright (c) 2021 The htmlact programmers. All rights reserved.
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
@@ -20,10 +20,10 @@ module Intersection_observer = struct
   let observe o el = ignore @@ Jv.call o "observe" [| El.to_jv el |]
 end
 
-let ev_cycle_start = Ev.Type.create (Jstr.v "hc-cycle-start")
-let ev_cycle_end = Ev.Type.create (Jstr.v "hc-cycle-end")
-let ev_cycle_error = Ev.Type.create (Jstr.v "hc-cycle-error")
-let ev_hc_in = Ev.Type.create (Jstr.v "hc-in")
+let ev_cycle_start = Ev.Type.create (Jstr.v "htmlact-cycle-start")
+let ev_cycle_end = Ev.Type.create (Jstr.v "htmlact-cycle-end")
+let ev_cycle_error = Ev.Type.create (Jstr.v "htmlact-cycle-error")
+let ev_htmlact_in = Ev.Type.create (Jstr.v "htmlact-in")
 
 let send_cycle_ev ev =
   (* FIXME maybe we coud honour the Js cancellation stuff. *)
@@ -40,7 +40,7 @@ let el_log_if_error el = function
 | Ok v -> v
 | Error e ->
     send_cycle_ev ev_cycle_error;
-    Console.(error [str "hc: element "; el; e ])
+    Console.(error [str "htmlact: element "; el; e ])
 
 (* Attributes, classes and headers *)
 
@@ -57,12 +57,12 @@ module At = struct
 end
 
 module Class = struct
-  let request = Jstr.v "hc-request"
-  let error = Jstr.v "hc-error"
-  let in' = Jstr.v "hc-in"
-  let in_parent = Jstr.v "hc-in-parent"
-  let out = Jstr.v "hc-out"
-  let out_parent = Jstr.v "hc-out-parent"
+  let request = Jstr.v "htmlact-request"
+  let error = Jstr.v "htmlact-error"
+  let in' = Jstr.v "htmlact-in"
+  let in_parent = Jstr.v "htmlact-in-parent"
+  let out = Jstr.v "htmlact-out"
+  let out_parent = Jstr.v "htmlact-out-parent"
 end
 
 (* Parsing helpers *)
@@ -203,8 +203,8 @@ module Query = struct
 
   (* Rescue *)
 
-  let hc_rescue_stamp = Jstr.v "data-hc-rescue-stamp"
-  let hc_rescue_stamp_prop = El.Prop.jstr hc_rescue_stamp
+  let htmlact_rescue_stamp = Jstr.v "data-htmlact-rescue-stamp"
+  let htmlact_rescue_stamp_prop = El.Prop.jstr htmlact_rescue_stamp
 
   let rescue_stamp el =
     Uri.Params.to_jstr (Brr_io.Form.Data.to_uri_params (of_el el))
@@ -215,17 +215,17 @@ module Query = struct
       if Jstr.equal (Jstr.v "false") rescue then () else
       let stamp = rescue_stamp el in
       if Jstr.equal (Jstr.v "true") rescue
-      then El.set_prop hc_rescue_stamp_prop stamp el else
+      then El.set_prop htmlact_rescue_stamp_prop stamp el else
       if Jstr.equal (Jstr.v "force") rescue
       then begin
-        El.set_prop hc_rescue_stamp_prop Jstr.(v "Force!" + stamp) el;
+        El.set_prop htmlact_rescue_stamp_prop Jstr.(v "Force!" + stamp) el;
         El.set_at At.query_rescue (Some (Jstr.v "true")) el;
       end else
       let err = Jstr.(At.query_rescue + v ": invalid value: " + rescue) in
       el_log_if_error el (Error err)
 
   let stamp_changed el =
-    not (Jstr.equal (rescue_stamp el) (El.prop hc_rescue_stamp_prop el))
+    not (Jstr.equal (rescue_stamp el) (El.prop htmlact_rescue_stamp_prop el))
 
   let rescue_on_beforeunload ev =
     let check_els = Jstr.(v "[" + At.query_rescue + v "='true']") in
@@ -422,7 +422,7 @@ module Effect = struct
           let err = Jstr.(k + v ": parse error: " + dur) in
           el_log_if_error el (error err); 0
     in
-    let dur = style_duration (Jstr.v "--hc-out-duration") el in
+    let dur = style_duration (Jstr.v "--htmlact-out-duration") el in
     let dur1 = style_duration (Jstr.v "animation-duration") el in
     let dur2 = style_duration (Jstr.v "transition-duration") el in
     let dur = if dur > dur1 then dur else dur1 in
@@ -451,7 +451,7 @@ module Effect = struct
         Fut.return ()
 
   let feedback_insert ~parent ~inserts =
-    if (Ev.dispatch (Ev.create ev_hc_in) (El.as_target parent)) then begin
+    if (Ev.dispatch (Ev.create ev_htmlact_in) (El.as_target parent)) then begin
       Feedback.insert ~parent ~inserts true;
       (* Make sure we had a render of [true]. *)
       ignore (G.request_animation_frame @@ fun _ ->
@@ -549,12 +549,12 @@ end
 (* Headers *)
 
 module Header = struct
-  let hc = Jstr.v "hc"
-  let redirect = Jstr.v "hc-redirect"
-  let reload = Jstr.v "hc-reload"
-  let location_push = Jstr.v "hc-location-push"
-  let location_replace = Jstr.v "hc-location-replace"
-  let location_title = Jstr.v "hc-location-title"
+  let htmlact = Jstr.v "htmlact"
+  let redirect = Jstr.v "htmlact-redirect"
+  let reload = Jstr.v "htmlact-reload"
+  let location_push = Jstr.v "htmlact-location-push"
+  let location_replace = Jstr.v "htmlact-location-replace"
+  let location_title = Jstr.v "htmlact-location-title"
 
   let header_error h msg = Jstr.(v "header " + h + v ": " + msg)
 
@@ -650,7 +650,7 @@ module Request = struct
     if Jstr.equal (Uri.scheme u) nobase_scheme
     then Uri.path u else Uri.to_jstr u
 
-  let headers = Fetch.Headers.of_assoc [Header.hc, Jstr.v "true"]
+  let headers = Fetch.Headers.of_assoc [Header.htmlact, Jstr.v "true"]
   let referrer_policy = Jstr.v "same-origin"
 
   let to_fetch_request url meth query =
@@ -773,11 +773,11 @@ module Ev = struct
   let cycle_start = ev_cycle_start
   let cycle_end = ev_cycle_end
   let cycle_error = ev_cycle_error
-  let hc_in = ev_hc_in
+  let htmlact_in = ev_htmlact_in
 end
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers
+   Copyright (c) 2021 The htmlact programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above

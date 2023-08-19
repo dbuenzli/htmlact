@@ -1,5 +1,5 @@
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers. All rights reserved.
+   Copyright (c) 2021 The htmlact programmers. All rights reserved.
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
@@ -23,15 +23,15 @@ tr td:nth-child(2) { min-width:20ex; }
 tr.broken td:nth-child(1) { color: rgba(var(--redish)); }
 
 tr { transition: all var(--dur-medium); }
-tr.hc-out { opacity: 0 }
-.hc-in tbody tr
+tr.htmlact-out { opacity: 0 }
+.htmlact-in tbody tr
 { opacity: 0; transform: translateY(calc(-1 * var(--size-half-line))) }
 |css}
 
 let delete_bookmark urlf b =
   let url = Example.uf urlf "bookmark/%d" b.Bookmark.id in
-  let r = Hc.request ~meth:`DELETE url in
-  let t = Hc.target "tr:up" and e = Hc.effect `Element in
+  let r = Htmlact.request ~meth:`DELETE url in
+  let t = Htmlact.target "tr:up" and e = Htmlact.effect `Element in
   Example.button ~at:[r; t; e] "Delete"
 
 let deletable_bookmark urlf b =
@@ -50,8 +50,8 @@ let table_view urlf bs =
   El.table [ El.thead [table_headers]; El.tbody bs]
 
 let actions urlf =
-  let r = Hc.request ~meth:`POST (Example.uf urlf "?action=restore") in
-  let t = Hc.target ":up :up table" and e = Hc.effect `Element in
+  let r = Htmlact.request ~meth:`POST (Example.uf urlf "?action=restore") in
+  let t = Htmlact.target ":up :up table" and e = Htmlact.effect `Element in
   let restore = Example.button ~at:[r; t; e] "Restore deleted" in
   El.div [restore]
 
@@ -92,7 +92,7 @@ let serve r = match Http.Request.path r with
 | p -> Http.Response.not_found_404 ()
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2021 The hc programmers
+   Copyright (c) 2021 The htmlact programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above

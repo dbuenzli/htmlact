@@ -1,50 +1,51 @@
-Hc — Hypertext connection for dynamic web pages
-===============================================
+Htmlact — Active HTML elements for dynamic webpages
+===================================================
 %%VERSION%%
 
-Hc declares dynamic web pages by using HTML data attributes to
+Htmlact declares dynamic webpages by using HTML data attributes to
 seamlessly update the page with HTML fragments requested from the
 server.
 
-Using hypertext as the interaction substrate keeps logic on the server
-and, in the simplest cases, reduces front-end client code to custom
-CSS animations and inclusion of a generic JavaScript driver.
+Using HTML as the interaction substrate keeps logic on the server and,
+in the simplest cases, reduces front-end client code to custom CSS
+animations and inclusion of a generic JavaScript driver.
 
-Hc is distributed under the ISC license. Compilation of the JavaScript
-driver depends on [brr][brr].
+Htmlact is distributed under the ISC license. It has no dependencies 
+but compilation of the JavaScript driver depends on [brr]. 
 
-Homepage: https://erratique.ch/software/hc
+Homepage: https://erratique.ch/software/htmlact
 
 [brr]: https://erratique.ch/software/brr
 
 # Installation
 
-hc can be installed with `opam`:
+htmlact can be installed with `opam`:
 
-    opam install hc
+    opam install htmlact
 
 If you don't use `opam` consult the [`opam`](opam) file for build
 instructions.
 
 # Documentation
 
-The documentation can be consulted [online][doc] or via `odig doc hc`.
+The documentation can be consulted [online] or via `odig doc htmlact`.
 
-Questions are welcome but better asked on the [OCaml forum][ocaml-forum] 
-than on the issue tracker.
+Questions are welcome but better asked on the [OCaml forum] than on
+the issue tracker.
 
-[doc]: https://erratique.ch/software/hc/doc
-[ocaml-forum]: https://discuss.ocaml.org/
+[doc]: https://erratique.ch/software/htmlact/doc
+[OCaml forum]: https://discuss.ocaml.org/
 
 # Examples
 
-The [`hc-examples`](examples/hc_examples.ml) executable serves
-examples to show case hypertext interaction strategies. It is installed
-if `webs` is. Install `hc` with tests to ensure it gets installed: 
+The [`htmlact-examples`](examples/htmlact_examples.ml) executable
+serves examples to show case HTML interaction strategies. It is
+installed if `webs` and `htmlit` are. Install `htmlact` with tests to
+ensure it gets installed:
 
-    opam install hc --with-test
+    opam install -t htmlact 
 
 # Acknowledgments
 
-Hc was inspired by [htmx](https://htmx.org).
+Htmlact was inspired by [htmx](https://htmx.org).
 
