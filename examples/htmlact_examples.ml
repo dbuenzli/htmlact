@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The htmlact programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: CC0-1.0
   ---------------------------------------------------------------------------*)
 
 open Webs
@@ -18,18 +18,19 @@ let examples =
     (module Autocomplete : Example.T); ]
 
 let index_page =
-  let intro =
-    let link = Example.link in
-    let htmlact_link =
-      link ~href:"https://erratique.ch/software/htmlact" "Htmlact"
-    in
-    let webs_link = link ~href:"https://erratique.ch/software/webs" "Webs" in
-    let htmx_link = link ~href:"https://htmx.org/examples/" "these ones" in
-    El.p
-      [El.txt "This is a list of page interaction patterns implemented
-               using "; htmlact_link; El.txt " and "; webs_link;
-       El.small [El.txt " (not required, you can use your own)."]; El.txt
-         " Most of these examples are a remix of "; htmx_link; El.txt "."]
+  let link = Example.link in
+  let htmlact = link ~href:"https://erratique.ch/software/htmlact" "Htmlact" in
+  let htmlit = link ~href:"https://erratique.ch/software/htmlit" "Htmlit" in
+  let webs = link ~href:"https://erratique.ch/software/webs" "Webs" in
+  let htmx = link ~href:"https://htmx.org/examples/" "these ones" in
+  let intro = El.splice [
+      El.p
+        [El.txt "This is a list of page interaction patterns \
+                 implemented using "; htmlact; El.txt ". ";
+         htmlit; El.txt " and "; webs;
+         El.txt " are also used but not required."];
+      El.p [
+        El.txt "Most of these examples are a remix of "; htmx; El.txt "."]]
   in
   let examples =
     let li (module E : Example.T) =
@@ -43,56 +44,41 @@ let index_page =
   let content = [intro; examples] in
   Example.page ~id:"" ~title:"Htmlact examples" content
 
-module Smap = Map.Make (String)
+module String_map = Map.Make (String)
 
 let example_map =
-  let add acc ((module E : Example.T) as e) = Smap.add E.prefix e acc in
-  List.fold_left add Smap.empty examples
+  let add acc ((module E : Example.T) as e) = String_map.add E.prefix e acc in
+  List.fold_left add String_map.empty examples
 
-let serve_examples r =
-  let prefix = List.hd (Http.Request.path r) in
-  match Smap.find_opt prefix example_map with
+let serve_example ~example request =
+  match String_map.find_opt example example_map with
   | None -> Http.Response.not_found_404 ~explain:"No such example" ()
   | Some (module E : Example.T) ->
-      let* r = Http.Request.forward_service ~strip:[prefix] r in
+      let* r = Http.Request.forward_service ~strip:[example] request in
       E.serve r
 
-let service file_root r =
-  Http.Response.result @@ match Http.Request.path r with
+let service file_root request =
+  Http.Response.result @@
+  let* () = Http.Request.clean_path request in
+  match Http.Request.path request with
   | ["htmlact-page.js" | "htmlact-page.map"] ->
-      let* `GET = Http.Request.allow Http.Method.[get] r in
-      let* file = Http.Request.to_absolute_filepath ~file_root r in
-      Webs_fs.send_file r file
+      let* file = Http.Request.to_absolute_filepath ~file_root request in
+      Webs_fs.send_file request file
   | [""] ->
-      let* `GET = Http.Request.allow Http.Method.[get] r in
+      let* `GET = Http.Request.allow Http.Method.[get] request in
       Ok (Http.Response.html Http.Status.ok_200 index_page)
-  | _ ->
-      serve_examples r
+  | example :: _ ->
+      serve_example ~example request
+  | [] ->
+      Http.Response.not_found_404 ()
 
-let find_root () = (* very hackish *)
+let find_file_root () = (* very hackish *)
   let bin_dir = Filename.(dirname Sys.executable_name) in
   match Filename.basename bin_dir with
   | "bin" -> Unix.realpath (Filename.concat bin_dir "../share/htmlact")
   | _ -> Unix.realpath (Filename.concat bin_dir "../htmlact-page-js")
 
 let main () =
-  let root = find_root () in
-  Webs_quick.serve ~name:"htmlact" (service root)
+  Webs_quick.serve (service (find_file_root ()))
 
 let () = if !Sys.interactive then () else exit (main ())
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2021 The htmlact programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)
