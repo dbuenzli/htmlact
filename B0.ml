@@ -78,7 +78,7 @@ let default =
            "--with-webs" "%{webs:installed}%"
            "--with-htmlit" "%{htmlit:installed}%"]]|}
     |> add B0_opam.Meta.depends [
-      "ocaml", {|>= "4.08.0"|};
+      "ocaml", {|>= "4.14.0"|};
       "ocamlfind", {|build|};
       "ocamlbuild", {|build|};
       "topkg", {|build & >= "1.0.3"|};

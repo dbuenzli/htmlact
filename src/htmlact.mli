@@ -15,13 +15,13 @@ open Htmlit
 
 (** {1:atts Attributes} *)
 
-val request : ?meth:[< Http.Method.t | `Sse] -> string -> At.t
-(** [request ~meth r] is a {{!page-manual.data_request}[data-request]}
-    attribute for URL [r] using method [meth] (defaults to [`GET]). *)
+val request : ?method':[< Http.Method.t | `Sse] -> string -> At.t
+(** [request ~method' r] is a {{!page-manual.data_request}[data-request]}
+    attribute for URL [r] using method [method'] (defaults to [`GET]). *)
 
-val request_path : ?meth:[< Http.Method.t | `Sse] -> Http.Path.t -> At.t
+val request_path : ?method':[< Http.Method.t | `Sse] -> Http.Path.t -> At.t
 (** [request ~meth p] is a {{!page-manual.data_request}[data-request]}
-    attribute for URL [p] using method [meth] (defaults to [`GET]). *)
+    attribute for URL [p] using method [method'] (defaults to [`GET]). *)
 
 val query : string -> At.t
 (** [query sel] is the {{!page-manual.data_target}[data-query]} attribute
@@ -134,5 +134,5 @@ val location_title : Webs.Http.Headers.Name.t
     {{!page-manual.header_location_title}[htmlact-location-title]} header. *)
 
 val encode_location_title : string -> string
-(** [encode_locationt_title s] encodes [s] for the {!location_title}
+(** [encode_location_title s] encodes [s] for the {!location_title}
     headers. *)

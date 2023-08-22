@@ -7,7 +7,6 @@ open Webs
 open Htmlit
 
 let ( let* ) = Result.bind
-let strf = Printf.sprintf
 
 let id = __MODULE__
 let name = "Update rows"
@@ -51,51 +50,57 @@ let table_view ?updated bs =
       El.tbody (List.map (selectable_bookmark ?updated) bs)]]
 
 let actions urlf =
-  let act a = Htmlact.request ~meth:`PUT (Example.uf urlf "?action=%s" a) in
-  let t = ":up :up form" in
-  let t = Htmlact.target t and q = Htmlact.query t in
-  let e = Htmlact.effect `Element in
-  let alive = Example.button ~at:[act "set-alive"; t; e; q] "Set alive" in
-  let broken = Example.button ~at:[act "set-broken"; t; e; q] "Set broken" in
+  let act a = Htmlact.request ~method':`PUT (Example.uf urlf "?action=%s" a) in
+  let sel = ":up :up form" in
+  let target = Htmlact.target sel in
+  let query = Htmlact.query sel in
+  let effect = Htmlact.effect `Element in
+  let at = [target; effect; query] in
+  let alive = Example.button ~at:(act "set-alive" :: at) "Set alive" in
+  let broken = Example.button ~at:(act "set-broken" :: at) "Set broken" in
   El.div [alive; broken]
 
-let update_bookmark_status r =
-  let* q = Http.Request.to_query r in
+let update_bookmark_status request =
+  let* query = Http.Request.to_query request in
   try
-    let broken = match Http.Query.find_first "action" q with
-    | Some "set-alive" -> false
-    | Some "set-broken" -> true
-    | Some a -> failwith (strf "%S: unknown action" a)
-    | None -> failwith (strf "missing action")
-    in
+    let failwithf fmt = Printf.ksprintf failwith fmt in
     let ids =
       let parse_id id = try int_of_string (String.trim id) with
-      | Failure _ -> failwith (strf "%s: not an id" id)
+      | Failure _ -> failwithf "%s: not an id" id
       in
-      List.map parse_id (Http.Query.find_all "ids" q)
+      List.map parse_id (Http.Query.find_all "ids" query)
     in
-    let bs = Bookmark.all () in
-    let ubs = List.filter (fun b -> List.mem b.Bookmark.id ids) bs in
-    let ubs = List.map (fun b -> { b with Bookmark.broken = broken }) ubs in
-    let () = List.iter Bookmark.set ubs in
+    let select_ids b = List.mem b.Bookmark.id ids in
+    let broken = match Http.Query.find_first "action" query with
+    | Some "set-alive" -> false
+    | Some "set-broken" -> true
+    | Some a -> failwithf "%S: unknown action" a
+    | None -> failwithf "missing action"
+    in
+    let update_broken b = { b with Bookmark.broken = broken } in
+    let bs = List.filter select_ids (Bookmark.all ()) in
+    let bs = List.map update_broken bs in
+    let () = List.iter Bookmark.set bs in
     Ok ids
   with
   | Failure explain -> Http.Response.bad_request_400 ~explain ()
 
-let index urlf =
+let index ~urlf =
   let content = El.splice [table_view (Bookmark.all ()); actions urlf] in
-  Example.page ~style ~id ~title:name [description; content]
+  Example.html_page ~style ~id ~title:name [description; content]
 
-let bookmark_table r =
-  let* m = Http.Request.allow Http.Method.[get; put] r in
-  match m with
-  | `GET -> Ok (Http.Response.html Http.Status.ok_200 (index (Example.urlf r)))
+let bookmark_table ~urlf request =
+  let* method' = Http.Request.allow Http.Method.[get; put] request in
+  match method' with
+  | `GET -> Ok (Http.Response.html Http.Status.ok_200 (index ~urlf))
   | `PUT ->
-      let* updated = update_bookmark_status r in
+      let* updated = update_bookmark_status request in
       let updated b = List.exists (fun id -> b.Bookmark.id = id) updated in
-      let table = Example.part [table_view ~updated (Bookmark.all ())] in
+      let table = Example.html [table_view ~updated (Bookmark.all ())] in
       Ok (Http.Response.html Http.Status.ok_200 table)
 
-let serve r = match Http.Request.path r with
-| [""] -> bookmark_table r
-| p -> Http.Response.not_found_404 ()
+let serve request =
+  let urlf = Example.urlf request ~prefix in
+  match Example.path ~prefix request with
+  | [""] -> bookmark_table ~urlf request
+  | p -> Http.Response.not_found_404 ()

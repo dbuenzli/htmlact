@@ -10,8 +10,8 @@ Using HTML as the interaction substrate keeps logic on the server and,
 in the simplest cases, reduces front-end client code to custom CSS
 animations and inclusion of a generic JavaScript driver.
 
-Htmlact is distributed under the ISC license. Compilation of the 
-JavaScript driver depends on [brr].
+Htmlact is distributed under the ISC license. It has no dependencies 
+but compilation of the JavaScript driver depends on [brr]. 
 
 Homepage: https://erratique.ch/software/htmlact
 
@@ -24,15 +24,14 @@ homepage: "https://erratique.ch/software/htmlact"
 doc: "https://erratique.ch/software/htmlact/doc"
 bug-reports: "https://github.com/dbuenzli/htmlact/issues"
 depends: [
-  "ocaml" {>= "4.08.0"}
+  "ocaml" {>= "4.14.0"}
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "topkg" {build & >= "1.0.3"}
   "brr"
-  "webs"
-  "htmlit"
   "js_of_ocaml-compiler" {>= "3.7.1"}
 ]
+depopts: ["webs" "htmlit"]
 build: [
   "ocaml"
   "pkg/pkg.ml"
@@ -41,5 +40,7 @@ build: [
   "%{dev}%"
   "--with-webs"
   "%{webs:installed}%"
+  "--with-htmlit"
+  "%{htmlit:installed}%"
 ]
 dev-repo: "git+https://erratique.ch/repos/htmlact.git"

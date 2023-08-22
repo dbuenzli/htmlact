@@ -6,16 +6,15 @@
 open Webs
 open Htmlit
 
-let ( let* ) r f = match r with Ok v -> f v | Error _ as e -> e
-let strf = Printf.sprintf
+let ( let* ) = Result.bind
 
 let id = __MODULE__
 let name = "Click to edit"
 let synopsis = "Click to edit a record in the page."
 let prefix = "click-to-edit"
-let description = Example.description [ El.txt
-  "When the edit button is clicked the bookmark record is replaced
-   by a form returned by the server to edit it." ]
+let description = Example.description [
+    El.txt "When the edit button is clicked the bookmark record is replaced \
+            by a form returned by the server to edit it." ]
 
 let style = {css|
 .record label::after { content: ":" }
@@ -28,32 +27,34 @@ form.htmlact-out, .record input { transition: all var(--dur-short); }
 
 let field_label n = El.label [El.txt n]
 let field v = Example.field [El.txt v]
-let field_link l = Example.field [El.a ~at:At.[href l] [El.txt l]]
+let field_link l = Example.field [El.a ~at:[At.href l] [El.txt l]]
 let input_field = Example.input_field
+let edit_button urlf b =
+  let url = Example.uf urlf "/bookmark/%d/editor" b.Bookmark.id in
+  let request = Htmlact.request url in
+  let target = Htmlact.target ".record:up" in
+  let effect = Htmlact.effect `Element in
+  Example.button ~at:[request; target; effect] "Edit"
 
-let view urlf b =
-  let edit_button urlf b =
-    let url = Example.uf urlf "bookmark/%d/editor" b.Bookmark.id in
-    let r = Htmlact.request url in
-    let t = Htmlact.target ".record:up" and e = Htmlact.effect `Element in
-    Example.button ~at:[r; t; e] "Edit"
-  in
-  let at = [At.class' "record"] in
-  El.div ~at [
+let cancel_button urlf b =
+  let url = Example.uf urlf "/bookmark/%d" b.Bookmark.id in
+  let request = Htmlact.request url in
+  let target = Htmlact.target ".record:up" in
+  let effect = Htmlact.effect `Element in
+  Example.button ~at:[request; target; effect] "Cancel"
+
+let view ~urlf b =
+  El.div ~at:[At.class' "record"] [
     El.div [ field_label "Name"; El.sp; field b.Bookmark.name ];
     El.div [ field_label "Link"; El.sp; field_link b.Bookmark.link ];
     El.div [ field_label "Description"; El.sp; field b.Bookmark.description ];
     El.div [ edit_button urlf b ]]
 
-let editor_view urlf b =
-  let cancel_button urlf b =
-    let r = Htmlact.request (Example.uf urlf "bookmark/%d" b.Bookmark.id) in
-    let t = Htmlact.target ".record:up" and e = Htmlact.effect `Element in
-    Example.button ~at:[r; t; e] "Cancel"
-  in
-  let r = Htmlact.request ~meth:`PUT (Example.uf urlf "bookmark/%d" b.Bookmark.id) in
-  let e = Htmlact.effect `Element in
-  El.form ~at:[At.class' "record"; r; e] [
+let editor_view ~urlf b =
+  let url = Example.uf urlf "/bookmark/%d" b.Bookmark.id in
+  let request = Htmlact.request ~method':`PUT url in
+  let effect = Htmlact.effect `Element in
+  El.form ~at:[At.class' "record"; request; effect] [
     El.div [ field_label "Name"; El.sp;
              input_field ~name:"name" ~type':"text" b.Bookmark.name ];
     El.div [ field_label "Link"; El.sp;
@@ -63,42 +64,42 @@ let editor_view urlf b =
                b.Bookmark.description ];
     El.div [ cancel_button urlf b; Example.submit "Save" ]]
 
-let put_bookmark r b =
-  let* q = Http.Request.to_query r in
-  let get n d = Option.value ~default:d (Http.Query.find_first n q) in
+let put_bookmark ~urlf request b =
+  let* query = Http.Request.to_query request in
+  let get n d = Option.value ~default:d (Http.Query.find_first n query) in
   let name = get "name" b.Bookmark.name in
   let link = get "link" b.Bookmark.link in
   let description = get "description" b.Bookmark.description in
-  let b' = { b with Bookmark.name; link; description } in
-  Bookmark.set b';
-  Ok (view (Example.urlf r) (Bookmark.get b'.Bookmark.id |> Option.get))
+  Bookmark.set { b with Bookmark.name; link; description };
+  Ok (view ~urlf (Bookmark.get ~id:b.Bookmark.id))
 
-let bookmark_part id act r = match int_of_string_opt id with
+let bookmark_part ~urlf request id action = match int_of_string_opt id with
 | None -> Http.Response.bad_request_400 ~explain:"illegal id" ()
 | Some id ->
-    match Bookmark.get id with
+    match Bookmark.find ~id with
     | None -> Http.Response.not_found_404 ()
     | Some b ->
-        match act with
+        match action with
         | [""] | [] ->
-            let* m = Http.Request.allow Http.Method.[get; put] r in
+            let* m = Http.Request.allow Http.Method.[get; put] request in
             let* view = match m with
-            | `GET -> Ok (view (Example.urlf r) b)
-            | `PUT -> put_bookmark r b
+            | `GET -> Ok (view ~urlf b)
+            | `PUT -> put_bookmark ~urlf request b
             in
-            Result.ok @@ Http.Response.html Http.Status.ok_200 (Example.part [view])
+            Ok (Http.Response.html Http.Status.ok_200 (Example.html [view]))
         | ["editor"] ->
-            let editor = editor_view (Example.urlf r) b in
-            Result.ok @@ Http.Response.html Http.Status.ok_200 (Example.part [editor])
+            let editor = editor_view ~urlf b in
+            Ok (Http.Response.html Http.Status.ok_200 (Example.html [editor]))
         | _ ->
             Http.Response.not_found_404 ()
 
 let index urlf =
-  let b = Bookmark.get 1 |> Option.get in
-  let content = view urlf b in
-  Example.page ~style ~id ~title:name [description; content]
+  let content = view ~urlf (Bookmark.get ~id:1) in
+  Example.html_page ~style ~id ~title:name [description; content]
 
-let serve r = match Http.Request.path r with
-| [""] -> Ok (Http.Response.html Http.Status.ok_200 (index (Example.urlf r)))
-| ("bookmark" :: id :: act) -> bookmark_part id act r
-| p -> Http.Response.not_found_404 ()
+let serve request =
+  let urlf = Example.urlf request ~prefix in
+  match Example.path ~prefix request with
+  | [""] -> Ok (Http.Response.html Http.Status.ok_200 (index urlf))
+  | "bookmark" :: id :: action -> bookmark_part ~urlf request id action
+  | p -> Http.Response.not_found_404 ()

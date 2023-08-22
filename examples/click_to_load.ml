@@ -7,7 +7,7 @@ open Webs
 open Htmlit
 
 let ( let* ) = Result.bind
-let strf = Printf.sprintf
+
 let paginate_list ?(per_page = 2) page_num (* one-based *) l =
   if per_page < 0 || page_num < 0 then None else
   let all = Array.of_list l in
@@ -46,9 +46,11 @@ let bookmark_row b =
       El.td [El.a ~at:At.[href b.Bookmark.link] [El.txt b.Bookmark.name]]]
 
 let load_next urlf n =
-  let r = Htmlact.request ~meth:`GET (Example.uf urlf "?page=%d" n) in
-  let t = Htmlact.target "tr:up" and e = Htmlact.effect `Element in
-  let more = Example.button ~at:[r; t; e] "More…" in
+  let url = Example.uf urlf "?page=%d" n in
+  let request = Htmlact.request ~method':`GET url in
+  let target = Htmlact.target "tr:up" in
+  let effect = Htmlact.effect `Element in
+  let more = Example.button ~at:[request; target; effect] "More…" in
   El.tr [El.td ~at:At.[int "colspan" 3] [more]]
 
 let bookmark_page_rows ?per_page urlf n =
@@ -66,15 +68,14 @@ let table_headers =
 let table_view ?updated rows =
   El.table [ El.thead [table_headers]; El.tbody rows]
 
-let index urlf =
+let index ~urlf =
   let content = El.splice [table_view (bookmark_page_rows urlf 1)] in
-  Example.page ~style ~id ~title:name [description; content]
+  Example.html_page ~style ~id ~title:name [description; content]
 
-let show_bookmark_table r =
-  let urlf = Example.urlf r in
-  let* `GET = Http.Request.allow Http.Method.[get] r in
-  let* q = Http.Request.to_query r in
-  let* page = match Http.Query.find_first "page" q with
+let show_bookmark_table ~urlf request =
+  let* `GET = Http.Request.allow Http.Method.[get] request in
+  let* query = Http.Request.to_query request in
+  let* page = match Http.Query.find_first "page" query with
   | None -> Ok None
   | Some page ->
       try Ok (Some (int_of_string page)) with
@@ -82,12 +83,14 @@ let show_bookmark_table r =
           Error (Http.Response.empty ~explain:e Http.Status.bad_request_400)
   in
   match page with
-  | None -> Ok (Http.Response.html Http.Status.ok_200 (index urlf))
+  | None -> Ok (Http.Response.html Http.Status.ok_200 (index ~urlf))
   | Some page_num ->
       match bookmark_page_rows urlf page_num with
       | [] -> Http.Response.not_found_404 ()
-      | ps -> Ok (Http.Response.html Http.Status.ok_200 (Example.part ps))
+      | ps -> Ok (Http.Response.html Http.Status.ok_200 (Example.html ps))
 
-let serve r = match Http.Request.path r with
-| [""] -> show_bookmark_table r
-| p -> Http.Response.not_found_404 ()
+let serve request =
+  let urlf = Example.urlf request ~prefix in
+  match Example.path ~prefix request with
+  | [""] -> show_bookmark_table ~urlf request
+  | p -> Http.Response.not_found_404 ()

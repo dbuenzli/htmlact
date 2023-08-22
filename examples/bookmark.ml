@@ -13,7 +13,14 @@ type t =
 let trash = ref []
 let table = ref []
 let all () = List.map snd !table
-let get id = List.assoc_opt id !table
+let search_name ~prefix =
+  let prefix = String.lowercase_ascii prefix in
+  let lowercase_name b = String.lowercase_ascii b.name in
+  let has_prefix b = String.starts_with ~prefix (lowercase_name b) in
+  List.filter has_prefix (all ())
+
+let find ~id = List.assoc_opt id !table
+let get ~id = Option.get (find ~id)
 let set b =
   table := List.sort compare ((b.id, b) :: (List.remove_assoc b.id !table))
 

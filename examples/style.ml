@@ -64,7 +64,7 @@ body { margin: 0 auto;
 
 small { font-size: var(--size-small); line-height: 0; }
 
-body > * + * { margin-top: var(--size-half-line) }
+body > * + *, .description > * + * { margin-top: var(--size-half-line) }
 
 /* Anchors */
 

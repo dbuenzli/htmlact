@@ -7,17 +7,18 @@ open Webs
 open Htmlit
 
 let ( let* ) = Result.bind
-let strf = Printf.sprintf
 
 let id = __MODULE__
 let name = "Autocomplete"
 let synopsis = "Adaptative autocomplete list."
 let prefix = "autocomplete"
-let description = Example.description [ El.div [El.txt
-  "On input the text field value is sent to server to ask for a list
-   of autocompletions. The input event is debounced by 500ms to avoid sending
-   too many requests to the server."]; El.div [
-   El.small [El.txt "FIXME the Safari experience it completely unreliable."]]]
+let description = Example.description [ El.p [
+    El.txt "On input the text field value is sent to server to ask for a list \
+            of autocompletions. The input event is debounced by 500ms to \
+            avoid sending too many requests."];
+    El.p [
+      El.small [
+        El.txt "FIXME the Safari experience it completely unreliable."]]]
 
 let style = {css|
 @keyframes spin { from { visibility: visible; opacity:0 } to { opacity:1 }}
@@ -26,56 +27,45 @@ let style = {css|
 { animation: spin var(--dur-medium) ease var(--dur-short) infinite alternate; }
 |css}
 
-let autocomplete_bookmarks ~prefix =
-  let prefix = String.lowercase_ascii prefix in
-  let has_prefix b =
-    Example.starts_with ~prefix (String.lowercase_ascii b.Bookmark.name)
-  in
-  List.filter has_prefix (Bookmark.all ())
+let var_name = "name"
 
-let autocomplete_options r =
-  let* q = Http.Request.to_query r in
-  let part =
-    let t = Option.value ~default:"" (Http.Query.find_first "title" q) in
-    let t = String.trim t in
-    if t = "" then [] else
-    let option b = El.option ~at:At.[value b.Bookmark.name] [] in
-    List.map option (autocomplete_bookmarks ~prefix:t)
-  in
-  Ok (Http.Response.html Http.Status.ok_200 (Example.part part))
+let bookmark_complete request =
+  let el_option b = El.option ~at:At.[value b.Bookmark.name] [] in
+  let* `GET = Http.Request.allow Http.Method.[get] request in
+  let* query = Http.Request.to_query request in
+  let name = Option.value ~default:"" (Http.Query.find_first var_name query) in
+  let name = String.trim name in
+  let bookmarks = if name = "" then [] else Bookmark.search_name ~prefix:name in
+  let html = Example.html (List.map el_option bookmarks) in
+  Ok (Http.Response.html Http.Status.ok_200 html)
 
 let bookmark_name_input urlf =
-  let list_id = "titles" in
-  let input =
-    let r = Htmlact.request ~meth:`POST (Example.uf urlf "") in
-    let t = Htmlact.target (":up #" ^ list_id) in
-    let f = Htmlact.feedback ":up .spinner" in
-    let e = Htmlact.event ~debounce_ms:500 "input" in
-    let at =
-      At.[ class' "field"; name "title"; type' "search"; int "size" 25;
-           v "list" list_id; autocomplete "off"; autofocus;
-           At.true' "incremental" ]
-    in
-    El.input ~at:(r :: t :: e :: f :: at) ()
+  let list_id = "names" in
+  let request = Htmlact.request ~method':`GET (Example.uf urlf "/complete") in
+  let target = Htmlact.target (":up #" ^ list_id) in
+  let feedback = Htmlact.feedback ":up .spinner" in
+  let effect = Htmlact.event ~debounce_ms:500 "input" in
+  let at =
+    At.[ class' "field"; name var_name; type' "search"; int "size" 25;
+         list list_id; autocomplete "off"; autofocus;
+         At.true' "incremental" ]
   in
+  let input = El.input ~at:(request :: target :: effect :: feedback :: at) () in
   let label = El.label [El.txt "Bookmark name"] in
-  [ label;
-    El.span ~at:At.[class' "spinner"] [El.txt "…"];
-    El.br ();
-    (* The form here prevents Safari of trying to complete non-sense.
-       It seems it pick-up the name from Bookmark name and tries to complete
-       from the address book !? *)
-    El.form [input; El.datalist ~at:At.[id list_id] []]]
+  El.splice
+    [ label; El.span ~at:At.[class' "spinner"] [El.txt "…"]; El.br ();
+      input; El.datalist ~at:At.[id list_id] []]
 
-let bookmark_name r =
-  let* m = Http.Request.allow Http.Method.[get; post] r in
-  match m with
-  | `POST -> autocomplete_options r
-  | `GET ->
-      let content = El.splice (bookmark_name_input (Example.urlf r)) in
-      let page = Example.page ~style ~id ~title:name [description; content] in
-      Ok (Http.Response.html Http.Status.ok_200 page)
+let bookmark_name urlf request =
+  let* `GET = Http.Request.allow Http.Method.[get] request in
+  let content = bookmark_name_input urlf in
+  let body = [description; content] in
+  let html_page = Example.html_page ~style ~id ~title:name body in
+  Ok (Http.Response.html Http.Status.ok_200 html_page)
 
-let serve r = match Http.Request.path r with
-| [""] -> bookmark_name r
-| p -> Http.Response.not_found_404 ()
+let serve request =
+  let urlf = Example.urlf request ~prefix in
+  match Example.path ~prefix request with
+  | [""] -> bookmark_name urlf request
+  | ["complete"] -> bookmark_complete request
+  | _ -> Http.Response.not_found_404 ()

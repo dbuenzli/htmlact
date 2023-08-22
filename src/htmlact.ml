@@ -8,15 +8,15 @@ open Htmlit
 
 let strf = Printf.sprintf
 
-let request ?meth url =
-  let req = match meth with
+let request ?method' url =
+  let req = match method' with
   | None -> url
   | Some `Sse -> strf "SSE %s" url
   | Some (#Http.Method.t as m) -> strf "%s %s" (Http.Method.encode m) url
   in
   At.v "data-request" req
 
-let request_path ?meth p = request ?meth (Http.Path.encode p)
+let request_path ?method' p = request ?method' (Http.Path.encode p)
 let query v = At.v "data-query" v
 let query_rescue v = At.v "data-query-rescue" @@ match v with
 | `Force -> "force"
