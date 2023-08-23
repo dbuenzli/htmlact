@@ -15,7 +15,7 @@ let examples =
     (module Update_rows : Example.T);
     (module Click_to_load : Example.T);
     (module Delete_rows : Example.T);
-    (module Autocomplete : Example.T); ]
+    (module Active_search : Example.T); ]
 
 let index_page =
   let li_example (module E : Example.T) =
