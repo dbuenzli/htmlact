@@ -362,7 +362,7 @@ Indicates the request is made by the [htamlact] page driver.
 This is the standard HTTP [referer] header, it indicates the URL of
 the page (without the fragment) that performs the request. [htmlact] makes
 requests with the
-{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#directives}[same-origin]} policy.
+{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#directives}[strict-origin]} policy.
 
 If your HTML fragment returns relative URLs they will be interpreted
 relative to [<url>] once they are injected in the DOM.

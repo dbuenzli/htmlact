@@ -651,7 +651,7 @@ module Request = struct
     then Uri.path u else Uri.to_jstr u
 
   let headers = Fetch.Headers.of_assoc [Header.htmlact, Jstr.v "true"]
-  let referrer_policy = Jstr.v "same-origin"
+  let referrer_policy = Jstr.v "strict-origin"
 
   let to_fetch_request url meth query =
     match Jstr.(equal meth (v "GET") || equal meth (v "HEAD")) with
