@@ -273,6 +273,12 @@ the connection cycle is feedback with
 {{!class_htmlact_request}[htmlact-request]} and
 {{!class_htmlact_error}[htmlact-error]}.
 
+{2:data_referrer_policy [data-referrer-policy="<policy>"]}
+
+The value of [<policy>] determines the {{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy}referrer-policy} with which
+{{:data_request}the request} ends up being made. If unspecified this is
+{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#strict-origin}[strict-origin]}.
+
 {1:selector Selector syntax}
 
 Attributes of [htmlact] use
@@ -359,14 +365,10 @@ Indicates the request is made by the [htamlact] page driver.
 
 {2:header_referer [referer: <url>]}
 
-This is the standard HTTP [referer] header, it indicates the URL of
+This is the standard HTTP [referer] header. It indicates the URL of
 the page (without the fragment) that performs the request. [htmlact] makes
-requests with the
-{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#directives}[strict-origin]} policy.
+requests according to the {{!data_referrer_policy}[data-referrer-policy]}
+attribute of the request element.
 
-If your HTML fragment returns relative URLs they will be interpreted
-relative to [<url>] once they are injected in the DOM.
-
-
-{b FIXME.} We should likely make that or at least the policy,
-tweakable in some way.
+If the HTML fragment of your response has relative URLs, they will be
+interpreted relative to [<url>] once they are injected in the DOM.

@@ -54,6 +54,7 @@ module At = struct
   let feedback = Jstr.v "data-feedback"
   let request = Jstr.v "data-request"
   let sel_request = Jstr.v "[data-request]"
+  let referrer_policy = Jstr.v "data-referrer-policy"
 end
 
 module Class = struct
@@ -651,16 +652,15 @@ module Request = struct
     then Uri.path u else Uri.to_jstr u
 
   let headers = Fetch.Headers.of_assoc [Header.htmlact, Jstr.v "true"]
-  let referrer_policy = Jstr.v "strict-origin"
+  let default_referrer_policy = Jstr.v "strict-origin"
 
-  let to_fetch_request url meth query =
-    match Jstr.(equal meth (v "GET") || equal meth (v "HEAD")) with
+  let to_fetch_request ~referrer_policy url method' query =
+    match Jstr.(equal method' (v "GET") || equal method' (v "HEAD")) with
     | true ->
         let url = real_url url in
         let q = Uri.Params.to_jstr (Form.Data.to_uri_params query) in
         let url = if Jstr.is_empty q then url else Jstr.(url + v "?" + q) in
         let redirect = Fetch.Request.Redirect.follow in
-        let method' = meth in
         let init =
           Fetch.Request.init ~referrer_policy ~headers ~redirect ~method' ()
         in
@@ -672,7 +672,6 @@ module Request = struct
         | false -> Fetch.Body.of_uri_params (Form.Data.to_uri_params query)
         in
         let redirect = Fetch.Request.Redirect.follow in
-        let method' = meth in
         let init =
           Fetch.Request.init
             ~referrer_policy ~headers ~redirect ~method' ~body ()
@@ -680,10 +679,14 @@ module Request = struct
         Fetch.Request.v ~init url
 end
 
-let http_request requestel meth url query target effect feedback =
+let http_request
+    requestel meth url query target effect feedback referrer_policy
+  =
   let open Fut.Syntax in
   Feedback.start_request ~requestel feedback;
-  let resp = Fetch.request (Request.to_fetch_request url meth query) in
+  let resp =
+    Fetch.request (Request.to_fetch_request ~referrer_policy url meth query)
+  in
   let resp = Fut.bind resp @@ function
   | Error _ as e -> Feedback.error_request ~requestel feedback; Fut.return e
   | Ok resp ->
@@ -728,9 +731,12 @@ let do_request ev =
       let* target = Target.of_el el in
       let* effect = Effect.of_el el in
       let feedback = Feedback.of_el el ~target in
+      let referrer_policy = match El.at At.referrer_policy el with
+      | None -> Request.default_referrer_policy | Some p -> p
+      in
       match kind with
       | `Http meth ->
-          http_request el meth url query target effect feedback
+          http_request el meth url query target effect feedback referrer_policy
       | `Sse ->
           sse_request el url query target effect feedback
       | `Websocket ->

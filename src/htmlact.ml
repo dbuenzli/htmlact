@@ -49,6 +49,25 @@ let effect_kind_to_string = function
 let effect k = At.v "data-effect" (effect_kind_to_string k)
 let feedback v = At.v "data-feedback" v
 
+type referrer_policy =
+[ `No_referrer | `No_referrer_when_downgrade | `Origin
+| `Origin_when_cross_origin | `Same_origin | `Strict_origin
+| `Strict_origin_when_cross_origin | `Unsafe_url | `Other of string ]
+
+let referrer_policy_to_string = function
+| `No_referrer -> "no-referrer"
+| `No_referrer_when_downgrade -> "no-referrer-when-downgrade"
+| `Origin -> "origin"
+| `Origin_when_cross_origin -> "origin-when-cross-origin"
+| `Same_origin -> "same-origin"
+| `Strict_origin -> "strict-origin"
+| `Strict_origin_when_cross_origin -> "strict-origin-when-cross-origin"
+| `Unsafe_url -> "unsafe-url"
+| `Other o -> o
+
+let referrer_policy p =
+  At.v "data-referrer-policy" (referrer_policy_to_string p)
+
 (* Durations. *)
 
 module Dur = struct

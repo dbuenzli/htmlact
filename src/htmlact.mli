@@ -61,6 +61,22 @@ val feedback : string -> At.t
 (** [feedback sel] is the {{!page-manual.data_feedback}[data-feedback]}
     attribute [sel]. *)
 
+type referrer_policy =
+[ `No_referrer
+| `No_referrer_when_downgrade
+| `Origin
+| `Origin_when_cross_origin
+| `Same_origin
+| `Strict_origin
+| `Strict_origin_when_cross_origin
+| `Unsafe_url
+| `Other of string ]
+(** The type for {{!page-manual.data_referrer_policy}referrer policies}. *)
+
+val referrer_policy : referrer_policy -> At.t
+(** [referrer_policy policy] is the {{!page-manual.data_referrer_policy}
+    [data-referrer-policy]} attribute [policy]. *)
+
 (** {1:dur Durations} *)
 
 (** Named durations.
