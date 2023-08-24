@@ -9,12 +9,37 @@ and, in the simplest cases, reduces front-end client code to custom
 CSS animations and an invocation of the {!Htmlact_page.init} function
 or adding the [htmlact-page.js] script to your page.
 
+See the {{!quick_start}quick start} and the {{!page-manual}manual} for
+the full details.
+
 Htmlact was inspired by {{:https://htmx.org/}htmx}.
+
+{1:manuals Manuals}
+
+The {{!page-manual}manual} explains it all.
+
+{1:library_htmlact Library [htmlact]}
+
+That's not strictly needed. Only useful if you use {!Webs} and {!Htmlit}.
+
+{!modules:
+Htmlact}
+
+{1:library_htmlact_page Library [htmlact.page]}
+
+That's not srictly needed either. Only useful if you already
+[js_of_ocaml] based front-end code and want to bundle the page driver
+with it.  You can instead simply add the [$(opam var
+htmlact:share)/htmlact-page.js] script to your webpages
+
+{!modules:
+Htmlact_page
+}
 
 {1:quick_start Quick start}
 
 If you really do not want to write a single line of front-end code,
-include the page [$(opam var share)/htmlact/htmlact-page.js] in your page. Now
+include the page [$(opam var htmlact:share)/htmlact-page.js] in your page. Now
 the following:
 
 {v
@@ -27,29 +52,10 @@ instructs a click on the button to perform a POST request to
 [/clicked] and replace the button with the HTML response. That's it.
 
 If you installed [htmlact] with tests ([opam install -t htmlact]). The
-[htamlct-examples] binary serves a few interaction examples and links
-to their sources.
+[htamlact-examples] binary serves a few interaction examples and links
+to {{:https://erratique.ch/repos/htmlact/tree/examples}their sources}.
 
-{1:manuals Manuals}
-
-{ul
-{- The {{!page-manual}manual} explains it all.}}
-
-{1:library_htmlact Library [htmlact]}
-
-That's not strictly needed. Only if you use {!Webs} and {!Htmlit}.
-
-{!modules:
-Htmlact}
-
-{1:library_htmlact_page Library [htmlact.page]}
-
-That's not srictly needed either. You can instead add the [htmlact-page.js]
-script to your page.
-
-{!modules:
-Htmlact_page
-}
+The {{!page-manual}manual} has all the details.
 
 {1:todo TODO}
 

@@ -3,12 +3,12 @@
    SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
-(** Htmlact HTML generation and HTTP headers.
+(** [Htmlit] HTML generation and [Webs] HTTP headers.
 
-    These function help generate [htmlact] {{!page-manual.attref}data
+    These functions help generate [htmlact] {{!page-manual.attref}data
     attributes} and {{!page-manual.response_headers}HTTP headers} with
     {!Htmlit} and {!Webs}. Ignore if you are using something else to
-    generate your HTML. *)
+    generate your HTML or interact with HTTP. *)
 
 open Webs
 open Htmlit

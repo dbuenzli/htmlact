@@ -79,28 +79,57 @@ Every request element on the page cycle through the following steps.
    {- Otherwise loop to 1 (if the element still exists
       after the effect).}}}}
 
-{1:css_class_feedback CSS class feedback}
+{1:selector Selector syntax}
 
-The following classes can be used to track the connection cycle.
+Attributes of [htmlact] use
+{{:https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors}CSS
+selectors} with
+{{:https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector}
+[querySelector]} to gather query data and target response effects. The
+selector is applied on the request element, however CSS selectors have
+no syntax for addressing ancestors. We slightly extend the syntax to
+allow it because in many cases this eschews the need to use element
+identifiers which improves modularity – use with care, it can also
+improve {e obscurity}.
 
-{2:class_htmlact_request [htmlact-request]}
+We allow a CSS selector to be prefixed by a sequence of ancestor
+specifications which select the root on which the CSS selector is then
+applied. This provides full tree addressing: first move up to find an
+ancestor and then down by applying the CSS selector to it.
 
-This class is applied on the {{!data_request}request element} and the
-{{!data_feedback}feedback element(s)} whenever a request to the server
-is ongoing.
+An ancestor specification is made of an optional element, optional
+classes and the made up [:up] pseudo-class. The semantic is to move up
+from the element by following the up selectors from left-to-right and
+then apply the CSS selector on ancestor that was found.
 
-This class can be used to trigger a CSS animation if the request is
-taking too much time. For example assuming you have a [.spinner] in
-your request element, the following shows the spinner if the request
-is taking longer than 500ms.
+Examples:
+{v
+  :scope > *         # children   (regular CSS selector)
+  :scope *           # descendent (regular CSS selector)
+  :up                # parent
+  :up :up            # parent's parent
+  :up :up :scope > * # parent's parent's children
+  .beet.root:up      # ancestor with classes beet and root
+  .beet:up .root:up  # move to beet ancestor, then to root ancestor
+  ul.beet.root:up    # ul ancestor with classes beet and root
+  div:up .beet       # div ancestor, beet classified descendents
+v}
+
+The full syntax as an {{:https://tools.ietf.org/html/rfc5234}RFC 5234 ABNF}
+grammar is described as follows:
 
 {v
-.spinner { visibility: hidden; }
-.htmlact-request .spinner { animation: spin 1s linear 500ms infinite; }
-
-@keyframes spin
-{ from { visibility: visible; } to { transform: rotate(360deg); }}
+         sel = *(up SP) css-selector
+          up = [[el] *class] ":up"
+          el = 1*(ALPHA)
+       class = "." 1*(ALPHA)
+css-selector = …   # See the CSS specification
 v}
+
+
+{1:css_class_feedback CSS class feedback}
+
+These classes track connection cycle states.
 
 {2:class_htmlact_error [htmlact-error]}
 
@@ -152,22 +181,85 @@ effectively removed:
 .htmlact-out { --htmlact-out-duration: 500ms }
 v}
 
+{2:class_htmlact_request [htmlact-request]}
+
+This class is applied on the {{!data_request}request element} and the
+{{!data_feedback}feedback element(s)} whenever a request to the server
+is ongoing.
+
+This class can be used to trigger a CSS animation if the request is
+taking too much time. For example assuming you have a [.spinner] in
+your request element, the following shows the spinner if the request
+is taking longer than 500ms.
+
+{v
+.spinner { visibility: hidden; }
+.htmlact-request .spinner { animation: spin 1s linear 500ms infinite; }
+
+@keyframes spin
+{ from { visibility: visible; } to { transform: rotate(360deg); }}
+v}
+
+
 {1:attref Attribute reference}
 
 The only attribute required for an HTML element to be connected to
 your server is {{!data_request}data-request} which specifies the
 request to initiate the connection.
 
-{2:data_request [data-request="[<m>] <url>"]}
+{2:data_effect [data-effect="<eff>"]}
 
-This attribute drives it all. If unspecified the element has no
-connection to the server and all other [data-*] attributes are
-ignored.
+The value [<eff>] determines the way the HTML response is used on the
+{{!data_target}target}. This can be:
 
-[<url>] is the URL to request, use the [ws://] or [wss://] scheme for
-a websocket connection. [<m>] is the HTTP request method or [SSE]
-to request a server sent events connection; defaults to [GET]
-if unspecified.
+{ul
+{- [children] to replaces the children of the target (default).}
+{- [element] to replaces the target itself.}
+{- [beforebegin] to insert before the target.}
+{- [afterbegin] to insert before the first child of the target.}
+{- [beforeend] to insert after the last child of the target.}
+{- [afterend] to insert after the target.}
+{- [none] to discard the HTML response.}
+{- [event <ev>] to discard the HTML response but trigger an event named
+   [<ev>] on the target}}
+
+If unspecified this is [children].
+
+{2:data_event [data-event="<ev> <mod>*"]}
+
+[<ev>] is the name of the JavaScript event of the
+{{!data_event_src}event source} that triggers requests. [<mod>] are
+modifiers for the event:
+
+{ul
+{- [once], the event is triggered only once.}
+{- [debounce:<dur>], a debouncing time, the request only
+   occurs after duration [<time>] of the {e last} event occurence.}
+{- [throttle:<dur>], a throttling time, the request occurs
+   immediatly but won't occur again before duration [<dur>].}
+{- [filter:<jsfun>], name of a filtering function. The function
+   is given the requesting element and the event, if it returns
+   [false] the event did not occur.}}
+
+If the attribute is unspecified this is:
+
+{ul
+{- [submit] for [form] elements.}
+{- [change] for [input], [textarea] and [select].}
+{- [click] otherwise.}}
+
+{2:data_event_src [data-event-src="<sel>"]}
+
+The DOM element(s), as {{!selector}selected} by [<sel>], whose
+{{!data_event}events} are being listened for to trigger a request.
+If unspecified this is the {{!data_request}request element} itself.
+
+{2:data_feedback [data-feedback="<sel>"]}
+
+DOM elements in addition to {{!data_target}target element} on which
+the connection cycle is feedback with
+{{!class_htmlact_request}[htmlact-request]} and
+{{!class_htmlact_error}[htmlact-error]}.
 
 {2:data_query [data-query="<sel>"]}
 
@@ -211,35 +303,25 @@ confirmation" modal is triggered.
 If [force], this forces the event to trigger (e.g. if you performed
 validation on the server and put it back on page).
 
+{2:data_referrer_policy [data-referrer-policy="<policy>"]}
 
-{2:data_event [data-event="<ev> <mod>*"]}
+The value of [<policy>] determines the
+{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy}referrer-policy}
+with which {{!data_request}the request} is made. It determines the
+value of the request's {{!header_referer}[referer]} header. If
+unspecified this is
+{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#strict-origin}[strict-origin]}.
 
-[<ev>] is the name of the JavaScript event of the
-{{!data_event_src}event source} that triggers requests. [<mod>] are
-modifiers for the event:
+{2:data_request [data-request="[<m>] <url>"]}
 
-{ul
-{- [once], the event is triggered only once.}
-{- [debounce:<dur>], a debouncing time, the request only
-   occurs after duration [<time>] of the {e last} event occurence.}
-{- [throttle:<dur>], a throttling time, the request occurs
-   immediatly but won't occur again before duration [<dur>].}
-{- [filter:<jsfun>], name of a filtering function. The function
-   is given the requesting element and the event, if it returns
-   [false] the event did not occur.}}
+This attribute drives it all. If unspecified the element has no
+connection to the server and all other [data-*] attributes are
+ignored.
 
-If the attribute is unspecified this is:
-
-{ul
-{- [submit] for [form] elements.}
-{- [change] for [input], [textarea] and [select].}
-{- [click] otherwise.}}
-
-{2:data_event_src [data-event-src="<sel>"]}
-
-The DOM element(s), as {{!selector}selected} by [<sel>], whose
-{{!data_event}events} are being listened for to trigger a request.
-If unspecified this is the {{!data_request}request element} itself.
+[<url>] is the URL to request, use the [ws://] or [wss://] scheme for
+a websocket connection. [<m>] is the HTTP request method or [SSE]
+to request a server sent events connection; defaults to [GET]
+if unspecified.
 
 {2:data_target [data-target="<sel>"]}
 
@@ -248,99 +330,35 @@ on which the {{!data_request}request} response performs its
 {{!data_effect}effect}. If unspecified this is the
 {{!data_request}request element} itself.
 
-{2:data_effect [data-effect="<eff>"]}
+{1:request_headers Request HTTP headers}
 
-The value [<eff>] determines the way the HTML response is used on the
-{{!data_target}target}. This can be:
+These headers are automatically added on requests made by
+the request elements.
 
-{ul
-{- [children] to replaces the children of the target (default).}
-{- [element] to replaces the target itself.}
-{- [beforebegin] to insert before the target.}
-{- [afterbegin] to insert before the first child of the target.}
-{- [beforeend] to insert after the last child of the target.}
-{- [afterend] to insert after the target.}
-{- [none] to discard the HTML response.}
-{- [event <ev>] to discard the HTML response but trigger an event named
-   [<ev>] on the target}}
+{2:header_htmlact [htmlact: true]}
 
-If unspecified this is [children].
+Indicates the request is made by the [htamlact] page driver.
 
-{2:data_feedback [data-feedback="<sel>"]}
+{2:header_referer [referer: <url>]}
 
-DOM elements in addition to {{!data_target}target element} on which
-the connection cycle is feedback with
-{{!class_htmlact_request}[htmlact-request]} and
-{{!class_htmlact_error}[htmlact-error]}.
+This is the standard HTTP [referer] header. It indicates the URL of
+the page (without the fragment) that performs the request. Requests
+are made according to the
+{{!data_referrer_policy}[data-referrer-policy]} attribute of the
+request element.
 
-{2:data_referrer_policy [data-referrer-policy="<policy>"]}
-
-The value of [<policy>] determines the {{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy}referrer-policy} with which
-{{:data_request}the request} ends up being made. If unspecified this is
-{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#strict-origin}[strict-origin]}.
-
-{1:selector Selector syntax}
-
-Attributes of [htmlact] use
-{{:https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors}CSS
-selectors} with
-{{:https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector}
-[querySelector]} to gather query data and target response effects. The
-selector is applied on the request element, however CSS selectors have
-no syntax for addressing ancestors. We slightly extend the syntax to
-allow it because in many cases this eschews the need to use element
-identifiers which improves modularity – use with care, it can also
-improve {e obscurity}.
-
-We allow a CSS selector to be prefixed by a sequence of ancestor
-specifications which select the root on which the CSS selector is then
-applied. This provides full tree addressing: first move up to find an
-ancestor and then down by applying the CSS selector to it.
-
-An ancestor specification is made of an optional element, optional
-classes and the made up [:up] pseudo-class. The semantic is to move up
-from the element by following the up selectors from left-to-right and
-then apply the CSS selector on ancestor that was found.
-
-Examples:
-{v
-  :scope > *         # children   (regular CSS selector)
-  :scope *           # descendent (regular CSS selector)
-  :up                # parent
-  :up :up            # parent's parent
-  :up :up :scope > * # parent's parent's children
-  .beet.root:up      # ancestor with classes beet and root
-  .beet:up .root:up  # move to beet ancestor, then to root ancestor
-  ul.beet.root:up    # ul ancestor with classes beet and root
-  div:up .beet       # div ancestor, beet classified descendents
-v}
-
-The full syntax as an {{:https://tools.ietf.org/html/rfc5234}RFC 5234 ABNF}
-grammar is described as follows:
-
-{v
-         sel = *(up SP) css-selector
-          up = [[el] *class] ":up"
-          el = 1*(ALPHA)
-       class = "." 1*(ALPHA)
-css-selector = …   # See the CSS specification
-v}
+If the HTML fragment of your response has relative URLs, they will be
+interpreted relative to [<url>] once they are injected in the DOM.
 
 {1:response_headers Response HTTP headers}
 
-The server should respond with an HTML fragment to be inserted with
-respect to the {{!data_target}request target}. Additionally it can use
-the headers described next to control the client.
+The server should respond with an HTML fragment. This fragment is
+inserted in the DOM according to the
+{{!data_target}[data-target]} and {{!data_effect}[data-effect]} values of the
+request attribute.
 
-{2:header_redirect [htmlact-redirect: <url>]}
-
-Redirects the page to [<url>]. The body of the response is ignored by
-[htmlact] page driver.
-
-{2:header_reload [htmlact-reload: true]}
-
-Reloads the page. The body of the response is igored by the [htmlact]
-page driver.
+Additionally the response can use the following headers to control the
+client.
 
 {2:header_location_push [htmlact-location-push: <url>]}
 
@@ -357,18 +375,12 @@ Replaces the current title by the percent encoded title [<pct-title>].
 Mostly used in conjunction with {{!header_location_push}[htmlact-location-push]}
 or {{!header_location_replace}[htmlact-location-replace]}.
 
-{1:request_headers Request HTTP headers}
+{2:header_redirect [htmlact-redirect: <url>]}
 
-{2:header_htmlact [htmlact: true]}
+Redirects the page to [<url>]. The body of the response is ignored by
+[htmlact] page driver.
 
-Indicates the request is made by the [htamlact] page driver.
+{2:header_reload [htmlact-reload: true]}
 
-{2:header_referer [referer: <url>]}
-
-This is the standard HTTP [referer] header. It indicates the URL of
-the page (without the fragment) that performs the request. [htmlact] makes
-requests according to the {{!data_referrer_policy}[data-referrer-policy]}
-attribute of the request element.
-
-If the HTML fragment of your response has relative URLs, they will be
-interpreted relative to [<url>] once they are injected in the DOM.
+Reloads the page. The body of the response is ignored by the [htmlact]
+page driver.
