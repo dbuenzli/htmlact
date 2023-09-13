@@ -69,11 +69,19 @@ let service ~file_root request =
   | [] ->
       Http.Response.not_found_404 ()
 
-let find_file_root () = (* extremely hackish *)
-  let bin_dir = Filename.(dirname Sys.executable_name) in
-  match Filename.basename bin_dir with
-  | "bin" -> Unix.realpath (Filename.concat bin_dir "../share/htmlact")
-  | _ -> (* dev *) Unix.realpath (Filename.concat bin_dir "../htmlact-page-js")
+let find_file_root () =
+  let dir = match Sys.getenv "HTMLACT_FILE_ROOT" with
+  | exception Not_found
+  | "" ->
+      (* Extremely hackish *)
+      let bin_dir = Filename.(dirname Sys.executable_name) in
+      begin match Filename.basename bin_dir with
+      | "bin" -> Filename.concat bin_dir "../share/htmlact"
+      | _ -> Filename.concat bin_dir "../htmlact-page-js"
+      end
+  | dir -> dir
+  in
+  Unix.realpath dir
 
 let main () = Webs_quick.serve (service ~file_root:(find_file_root ()))
 let () = if !Sys.interactive then () else exit (main ())
