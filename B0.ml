@@ -3,6 +3,7 @@ open Result.Syntax
 
 (* OCaml library names *)
 
+let unix = B0_ocaml.libname "unix"
 let brr = B0_ocaml.libname "brr"
 let webs = B0_ocaml.libname "webs"
 let webs_cli = B0_ocaml.libname "webs.cli"
@@ -34,7 +35,7 @@ let htmlact_page_js =
 
 let htmlact_examples =
   let doc = "Htmlact examples" in
-  let requires = [htmlact; webs; webs_cli; webs_unix; htmlit] in
+  let requires = [unix; htmlact; webs; webs_cli; webs_unix; htmlit] in
   let srcs = [ `Dir ~/"examples" ] in
   let exec_env env u =
     let driver_dir = Fpath.to_string (B0_env.unit_dir env htmlact_page_js) in
