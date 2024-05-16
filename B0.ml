@@ -45,8 +45,8 @@ let htmlact_examples =
   let meta =
     B0_meta.empty
     |> ~~ B0_ocaml.Code.needs `Native
-    |> ~~ B0_unit.Exec.cwd `Scope_dir
-    |> ~~ B0_unit.Exec.env (`Fun ("Adds .js location in env", exec_env))
+    |> ~~ B0_unit.Action.cwd `Scope_dir
+    |> ~~ B0_unit.Action.env (`Fun ("Adds .js location in env", exec_env))
   in
   let wrap proc b = B0_build.require_unit b htmlact_page_js; proc b in
   B0_ocaml.exe "htmlact-examples" ~wrap ~doc ~srcs ~requires ~meta
