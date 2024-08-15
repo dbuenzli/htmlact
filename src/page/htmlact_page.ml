@@ -652,7 +652,7 @@ module Request = struct
     then Uri.path u else Uri.to_jstr u
 
   let headers = Fetch.Headers.of_assoc [Header.htmlact, Jstr.v "true"]
-  let default_referrer_policy = Jstr.v "strict-origin"
+  let default_referrer_policy = Jstr.v "same-origin"
 
   let to_fetch_request ~referrer_policy url method' query =
     match Jstr.(equal method' (v "GET") || equal method' (v "HEAD")) with

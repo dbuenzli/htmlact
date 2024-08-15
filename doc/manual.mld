@@ -310,7 +310,10 @@ The value of [<policy>] determines the
 with which {{!data_request}the request} is made. It determines the
 value of the request's {{!header_referer}[referer]} header. If
 unspecified this is
-{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#strict-origin}[strict-origin]}.
+{{:https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#same-origin}[same-origin]}.
+
+{b Note.} We wanted to use [strict-origin] but on localhost it
+doesn't seem to send the full path.
 
 {2:data_request [data-request="[<m>] <url>"]}
 
