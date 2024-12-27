@@ -83,7 +83,7 @@ let update_bookmark_status request =
     let () = List.iter Bookmark.set bs in
     Ok ids
   with
-  | Failure explain -> Http.Response.bad_request_400 ~explain ()
+  | Failure e -> Http.Response.bad_request_400 ~log:e ()
 
 let index ~urlf =
   let content = El.splice [table_view (Bookmark.all ()); actions urlf] in

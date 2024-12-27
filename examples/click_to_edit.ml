@@ -74,7 +74,7 @@ let put_bookmark ~urlf request b =
   Ok (view ~urlf (Bookmark.get ~id:b.Bookmark.id))
 
 let bookmark_part ~urlf request id action = match int_of_string_opt id with
-| None -> Http.Response.bad_request_400 ~explain:"illegal id" ()
+| None -> Http.Response.bad_request_400 ~log:"illegal id" ()
 | Some id ->
     match Bookmark.find ~id with
     | None -> Http.Response.not_found_404 ()

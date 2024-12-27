@@ -80,7 +80,7 @@ let show_bookmark_table ~urlf request =
   | Some page ->
       try Ok (Some (int_of_string page)) with
       | Failure e ->
-          Error (Http.Response.empty ~explain:e Http.Status.bad_request_400)
+          Error (Http.Response.empty ~log:e Http.Status.bad_request_400)
   in
   match page with
   | None -> Ok (Http.Response.html Http.Status.ok_200 (index ~urlf))

@@ -76,11 +76,11 @@ let index ~urlf request =
           Ok (Http.Response.html Http.Status.ok_200 html)
       | v ->
           let some = Printf.sprintf "unknown action %s" in
-          let explain = Option.fold ~none:"missing action" ~some v in
-          Http.Response.bad_request_400 ~explain ()
+          let log = Option.fold ~none:"missing action" ~some v in
+          Http.Response.bad_request_400 ~log ()
 
 let bookmark_delete id request = match int_of_string_opt id with
-| None -> Http.Response.bad_request_400 ~explain:"illegal id" ()
+| None -> Http.Response.bad_request_400 ~log:"illegal id" ()
 | Some id ->
     let* `DELETE = Http.Request.allow Http.Method.[delete] request in
     match Bookmark.find ~id with

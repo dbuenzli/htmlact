@@ -51,7 +51,7 @@ let example_map =
 
 let serve_example ~example request =
   match String_map.find_opt example example_map with
-  | None -> Http.Response.not_found_404 ~explain:"No such example" ()
+  | None -> Http.Response.not_found_404 ~log:"No such example" ()
   | Some (module E : Example.T) -> E.serve request
 
 let service ~file_root request =
