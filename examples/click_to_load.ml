@@ -49,8 +49,8 @@ let load_next urlf n =
   let url = Example.uf urlf "?page=%d" n in
   let request = Htmlact.request ~method':`GET url in
   let target = Htmlact.target "tr:up" in
-  let effect = Htmlact.effect `Element in
-  let more = Example.button ~at:[request; target; effect] "More…" in
+  let effect' = Htmlact.effect' `Element in
+  let more = Example.button ~at:[request; target; effect'] "More…" in
   El.tr [El.td ~at:At.[int "colspan" 3] [more]]
 
 let bookmark_page_rows ?per_page urlf n =

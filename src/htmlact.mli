@@ -53,8 +53,8 @@ type effect_kind =
 | `None | `Event of string ]
 (** The type for kind of {{!page-manual.data_effect}request effects}. *)
 
-val effect : effect_kind -> At.t
-(** [effect e] is the {{!page-manual.data_effect}[data-effect]} attribute
+val effect' : effect_kind -> At.t
+(** [effect' e] is the {{!page-manual.data_effect}[data-effect]} attribute
     [e]. *)
 
 val feedback : string -> At.t

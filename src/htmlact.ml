@@ -46,7 +46,7 @@ let effect_kind_to_string = function
 | `Beforeend -> "beforeend" | `Afterend -> "afterend"
 | `None -> "none" | `Event ev -> "event " ^ ev
 
-let effect k = At.v "data-effect" (effect_kind_to_string k)
+let effect' k = At.v "data-effect" (effect_kind_to_string k)
 let feedback v = At.v "data-feedback" v
 
 type referrer_policy =

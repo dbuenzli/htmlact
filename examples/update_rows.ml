@@ -54,8 +54,8 @@ let actions urlf =
   let sel = ":up :up form" in
   let target = Htmlact.target sel in
   let query = Htmlact.query sel in
-  let effect = Htmlact.effect `Element in
-  let at = [target; effect; query] in
+  let effect' = Htmlact.effect' `Element in
+  let at = [target; effect'; query] in
   let alive = Example.button ~at:(act "set-alive" :: at) "Set alive" in
   let broken = Example.button ~at:(act "set-broken" :: at) "Set broken" in
   El.div [alive; broken]

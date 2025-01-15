@@ -50,7 +50,7 @@ module At = struct
   let event = Jstr.v "data-event"
   let event_src = Jstr.v "data-event-src"
   let target = Jstr.v "data-target"
-  let effect = Jstr.v "data-effect"
+  let effect' = Jstr.v "data-effect"
   let feedback = Jstr.v "data-feedback"
   let request = Jstr.v "data-request"
   let sel_request = Jstr.v "[data-request]"
@@ -539,11 +539,11 @@ module Effect = struct
       Ok kind
     with Jv.Error e -> reword_error Jstr.(append (v "effect: ")) e
 
-  let of_el el = match El.at At.effect el with
+  let of_el el = match El.at At.effect' el with
   | None -> Ok Children
   | Some s ->
       match of_jstr s with
-      | Error e -> reword_error Jstr.(append (At.effect + v ": ")) e
+      | Error e -> reword_error Jstr.(append (At.effect' + v ": ")) e
       | Ok _ as v -> v
 end
 
@@ -680,7 +680,7 @@ module Request = struct
 end
 
 let http_request
-    requestel meth url query target effect feedback referrer_policy
+    requestel meth url query target effect' feedback referrer_policy
   =
   let open Fut.Syntax in
   Feedback.start_request ~requestel feedback;
@@ -706,17 +706,17 @@ let http_request
               Feedback.error_request ~requestel feedback; Fut.return e
           | Ok html ->
               Feedback.end_request ~requestel feedback;
-              let* () = Effect.apply ~target effect html in
+              let* () = Effect.apply ~target effect' html in
               send_cycle_ev ev_cycle_end;
               Fut.ok ()
   in
   Fut.await resp (el_log_if_error requestel);
   Ok ()
 
-let sse_request el url query target effect feedback =
+let sse_request el url query target effect' feedback =
   error (Jstr.v "SSE unimplemented")
 
-let websocket_request el url query target effect feedback =
+let websocket_request el url query target effect' feedback =
   error (Jstr.v "Websockets unimplemented")
 
 let do_request ev =
@@ -729,18 +729,18 @@ let do_request ev =
       let* url, kind = Request.of_jstr req in
       let query = Query.of_el el ~url in
       let* target = Target.of_el el in
-      let* effect = Effect.of_el el in
+      let* effect' = Effect.of_el el in
       let feedback = Feedback.of_el el ~target in
       let referrer_policy = match El.at At.referrer_policy el with
       | None -> Request.default_referrer_policy | Some p -> p
       in
       match kind with
       | `Http meth ->
-          http_request el meth url query target effect feedback referrer_policy
+          http_request el meth url query target effect' feedback referrer_policy
       | `Sse ->
-          sse_request el url query target effect feedback
+          sse_request el url query target effect' feedback
       | `Websocket ->
-          websocket_request el url query target effect feedback
+          websocket_request el url query target effect' feedback
 
 let install_observer () = (* Observe DOM additions and removals *)
   let obs records _obs =

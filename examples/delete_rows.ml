@@ -31,8 +31,8 @@ let delete_bookmark ~urlf b =
   let url = Example.uf urlf "/bookmark/%d" b.Bookmark.id in
   let request = Htmlact.request ~method':`DELETE url in
   let target = Htmlact.target "tr:up" in
-  let effect = Htmlact.effect `Element in
-  Example.button ~at:[request; target; effect] "Delete"
+  let effect' = Htmlact.effect' `Element in
+  Example.button ~at:[request; target; effect'] "Delete"
 
 let deletable_bookmark ~urlf b =
   let status = if b.Bookmark.broken then "broken" else "alive" in
@@ -53,8 +53,8 @@ let actions ~urlf =
   let url = Example.uf urlf "?action=restore" in
   let request = Htmlact.request ~method':`POST url in
   let target = Htmlact.target ":up :up table" in
-  let effect = Htmlact.effect `Element in
-  let at = [request; target; effect] in
+  let effect' = Htmlact.effect' `Element in
+  let at = [request; target; effect'] in
   let restore = Example.button ~at "Restore deleted" in
   El.div [restore]
 

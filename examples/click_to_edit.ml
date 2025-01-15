@@ -33,15 +33,15 @@ let edit_button urlf b =
   let url = Example.uf urlf "/bookmark/%d/editor" b.Bookmark.id in
   let request = Htmlact.request url in
   let target = Htmlact.target ".record:up" in
-  let effect = Htmlact.effect `Element in
-  Example.button ~at:[request; target; effect] "Edit"
+  let effect' = Htmlact.effect' `Element in
+  Example.button ~at:[request; target; effect'] "Edit"
 
 let cancel_button urlf b =
   let url = Example.uf urlf "/bookmark/%d" b.Bookmark.id in
   let request = Htmlact.request url in
   let target = Htmlact.target ".record:up" in
-  let effect = Htmlact.effect `Element in
-  Example.button ~at:[request; target; effect] "Cancel"
+  let effect' = Htmlact.effect' `Element in
+  Example.button ~at:[request; target; effect'] "Cancel"
 
 let view ~urlf b =
   El.div ~at:[At.class' "record"] [
@@ -53,8 +53,8 @@ let view ~urlf b =
 let editor_view ~urlf b =
   let url = Example.uf urlf "/bookmark/%d" b.Bookmark.id in
   let request = Htmlact.request ~method':`PUT url in
-  let effect = Htmlact.effect `Element in
-  El.form ~at:[At.class' "record"; request; effect] [
+  let effect' = Htmlact.effect' `Element in
+  El.form ~at:[At.class' "record"; request; effect'] [
     El.div [ field_label "Name"; El.sp;
              input_field ~name:"name" ~type':"text" b.Bookmark.name ];
     El.div [ field_label "Link"; El.sp;
