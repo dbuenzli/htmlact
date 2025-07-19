@@ -44,3 +44,4 @@ build: [
   "%{htmlit:installed}%"
 ]
 dev-repo: "git+https://erratique.ch/repos/htmlact.git"
+x-maintenance-intent: ["(latest)"]

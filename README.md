@@ -1,6 +1,5 @@
 Htmlact — Active HTML elements for dynamic webpages
 ===================================================
-%%VERSION%%
 
 Htmlact declares dynamic webpages by using HTML data attributes to
 seamlessly update the page with HTML fragments requested from the
@@ -13,11 +12,11 @@ animations and inclusion of a generic JavaScript driver.
 Htmlact is distributed under the ISC license. It has no dependencies 
 but compilation of the JavaScript driver depends on [brr]. 
 
-Homepage: https://erratique.ch/software/htmlact
+Homepage: <https://erratique.ch/software/htmlact>
 
 [brr]: https://erratique.ch/software/brr
 
-# Installation
+## Installation
 
 htmlact can be installed with `opam`:
 
@@ -26,7 +25,7 @@ htmlact can be installed with `opam`:
 If you don't use `opam` consult the [`opam`](opam) file for build
 instructions.
 
-# Documentation
+## Documentation
 
 The documentation can be consulted [online] or via `odig doc htmlact`.
 
@@ -36,7 +35,7 @@ the issue tracker.
 [online]: https://erratique.ch/software/htmlact/doc
 [OCaml forum]: https://discuss.ocaml.org/
 
-# Examples
+## Examples
 
 The [`htmlact-examples`](examples/htmlact_examples.ml) executable
 serves examples to show case HTML interaction strategies. It is
@@ -45,7 +44,7 @@ ensure it gets installed:
 
     opam install -t htmlact 
 
-# Acknowledgments
+## Acknowledgments
 
 Htmlact was inspired by [htmx](https://htmx.org).
 

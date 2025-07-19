@@ -16,12 +16,12 @@ let htmlact_page = B0_ocaml.libname "htmlact.page"
 (* Libraries *)
 
 let htmlact_lib =
-  let srcs = [ `Dir ~/"src" ] in
+  let srcs = [`Dir ~/"src"] in
   let requires = [webs; htmlit] in
   B0_ocaml.lib htmlact ~doc:"htmlact library" ~srcs ~requires
 
 let htmlact_page_lib =
-  let srcs = [ `Dir ~/"src/page"] in
+  let srcs = [`Dir ~/"src/page"] in
   let requires = [brr] in
   B0_ocaml.lib htmlact_page ~doc:"Webpage driver library" ~srcs ~requires
 
@@ -36,7 +36,7 @@ let htmlact_page_js =
 let htmlact_examples =
   let doc = "Htmlact examples" in
   let requires = [unix; htmlact; webs; webs_cli; webs_unix; htmlit] in
-  let srcs = [ `Dir ~/"examples" ] in
+  let srcs = [`Dir ~/"examples"] in
   let exec_env env u =
     let driver_dir = Fpath.to_string (B0_env.unit_dir env htmlact_page_js) in
     let env = B0_env.build_env env in
@@ -44,9 +44,13 @@ let htmlact_examples =
   in
   let meta =
     B0_meta.empty
-    |> ~~ B0_ocaml.Code.needs `Native
     |> ~~ B0_unit.Action.cwd `Scope_dir
     |> ~~ B0_unit.Action.env (`Fun ("Adds .js location in env", exec_env))
+    (* TODO b0: on Auto B0_ocaml.wanted we get Native but this also dynamically
+       needs Byte. For now we simply play on Auto's behaviour to get byte
+       aswell but it's unsatisfactory. *)
+    |> ~~ B0_ocaml.Code.restrict
+      ("Auto force Bytecode", Fun.id)
   in
   let wrap proc b = B0_build.require_unit b htmlact_page_js; proc b in
   B0_ocaml.exe "htmlact-examples" ~wrap ~doc ~srcs ~requires ~meta
