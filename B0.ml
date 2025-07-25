@@ -78,7 +78,7 @@ let default =
       "ocaml", {|>= "4.14.0"|};
       "ocamlfind", {|build|};
       "ocamlbuild", {|build|};
-      "topkg", {|build & >= "1.0.3"|};
+      "topkg", {|build & >= "1.1.0"|};
       "brr", "";
       "js_of_ocaml-compiler", {|>= "3.7.1"|};
     ]
