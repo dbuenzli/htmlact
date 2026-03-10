@@ -117,6 +117,7 @@ module Sel = struct
   | Some el when Jstr.is_empty css_sel -> f el acc
   | Some el -> El.fold_find_by_selector ~root:el f css_sel acc
 
+  let scope_str = Jstr.v ":scope"
   let up_str = Jstr.v ":up"
   let dot = Jstr.v "."
   let of_jstr s =
@@ -129,7 +130,13 @@ module Sel = struct
           then Some j else None
       in
       match next with
-      | None -> List.rev ups, Jstr.trim (Jstr.slice ~start:i s)
+      | None ->
+          let css_sel = Jstr.trim (Jstr.slice ~start:i s) in
+          let css_sel =
+            if Jstr.is_empty css_sel then css_sel else
+            Jstr.concat ~sep:Jstr.sp [scope_str; css_sel]
+          in
+          List.rev ups, css_sel
       | Some j ->
           let pre = Jstr.trim (Jstr.slice ~start:i ~stop:j s) in
           let ups = match Jstr.cuts ~sep:dot pre with
