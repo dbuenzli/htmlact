@@ -24,7 +24,7 @@ val request_path : ?method':[< Http.Method.t | `Sse] -> Http.Path.t -> At.t
     attribute for URL [p] using method [method'] (defaults to [`GET]). *)
 
 val query : string -> At.t
-(** [query sel] is the {{!page-manual.data_target}[data-query]} attribute
+(** [query sel] is the {{!page-manual.data_query}[data-query]} attribute
     [sel]. *)
 
 val query_rescue : [`Bool of bool | `Force] -> At.t
