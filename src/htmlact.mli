@@ -41,8 +41,13 @@ type dur_ms = int
 
 val event : ?once:bool -> ?debounce_ms:dur_ms -> ?throttle_ms:dur_ms ->
   ?filter:string -> string -> At.t
-(** [event ()] is the {{!page-manual.data_event}data-event} attribute
+(** [event ev] is the {{!page-manual.data_event}data-event} attribute
     [ev]. *)
+
+val add_event :
+  ?once:bool -> ?debounce_ms:dur_ms -> ?throttle_ms:dur_ms ->
+  ?filter:string -> string -> At.t -> At.t
+(** [add_event] adds an additional event to the result of an {!event}. *)
 
 val target : string -> At.t
 (** [target sel] is the {{!page-manual.data_target}[data-target]} attribute

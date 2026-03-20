@@ -225,7 +225,7 @@ The value [<eff>] determines the way the HTML response is used on the
 
 If unspecified this is [children].
 
-{2:data_event [data-event="<ev> <mod>*"]}
+{2:data_event [data-event="<ev> <mod>* [, <ev> <mod>*]*"]}
 
 [<ev>] is the name of the JavaScript event of the
 {{!data_event_src}event source} that triggers requests. [<mod>] are
@@ -240,6 +240,8 @@ modifiers for the event:
 {- [filter:<jsfun>], name of a filtering function. The function
    is given the requesting element and the event, if it returns
    [false] the event did not occur.}}
+
+Multiple events can be specified by separating them a comma.
 
 If the attribute is unspecified this is:
 

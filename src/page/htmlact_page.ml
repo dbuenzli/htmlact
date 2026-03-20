@@ -69,7 +69,7 @@ end
 (* Parsing helpers *)
 
 module Parse = struct
-  let tokenize s = Jstr.cuts ~sep:Jstr.sp s
+  let tokenize s = Jstr.cuts ~sep:Jstr.sp (Jstr.trim s)
   let error err = Jv.throw err
   let error_key_unknown k = Jstr.(v "unknown key: " + k)
   let rec kv = function
@@ -290,9 +290,19 @@ module Event = struct
       Ok {name; once; debounce_ms; throttle_ms; filter}
     with Jv.Error e -> reword_error Jstr.(append (v "event: ")) e
 
+  let list_of_jstr s =
+    let rec loop acc = function
+    | [] -> Ok (List.rev acc)
+    | s :: ss ->
+        match of_jstr s with
+        | Error _ as e -> e
+        | Ok ev -> loop (ev :: acc) ss
+    in
+    loop [] (Jstr.cuts ~sep:(Jstr.v ",") s)
+
   let of_el el = match El.at At.event el with
   | Some s ->
-      begin match of_jstr s with
+      begin match list_of_jstr s with
       | Error e -> reword_error Jstr.(append (At.event + v ": ")) e
       | Ok _ as v -> v
       end
@@ -305,7 +315,10 @@ module Event = struct
         then Ev.Type.name Ev.change
         else Ev.Type.name Ev.click
       in
-      Ok { name; once = false; debounce_ms = 0; throttle_ms = 0; filter = None }
+      let ev =
+        { name; once = false; debounce_ms = 0; throttle_ms = 0; filter = None }
+      in
+      Ok [ev]
 
   let filter ev e = match ev.filter with
   | None -> true
@@ -353,14 +366,17 @@ module Event = struct
         prevent_some_default e;
         if filter ev e then cb e else ()
     in
-    Ok (ignore (Ev.listen etype cb target))
+    ignore (Ev.listen etype cb target)
 
   let connect_el cb el () =
     Query.stamp_if_needed el;
     el_log_if_error el @@
-    let* ev = of_el el in
-    if ev.once then Ok (ignore (once ev el cb)) else
-    listen ev el cb
+    let* evs = of_el el in
+    let connect ev =
+      if ev.once then ignore (once ev el cb) else listen ev el cb
+    in
+    List.iter connect evs;
+    Ok ()
 
   let connect_descendents cb el =
     El.fold_find_by_selector ~root:el (connect_el cb) At.sel_request ()

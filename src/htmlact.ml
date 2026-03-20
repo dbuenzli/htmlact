@@ -27,14 +27,22 @@ let event_src v = At.v "data-event-src" v
 
 type dur_ms = int
 
-let event ?(once = false) ?debounce_ms ?throttle_ms ?filter event =
+let event_data ?(once = false) ?debounce_ms ?throttle_ms ?filter event =
   let dur k = function None -> "" | Some d -> strf " %s:%dms" k d in
   let once = if once then " once" else "" in
   let debounce = dur "debounce" debounce_ms in
   let throttle = dur "throttle" throttle_ms in
   let filter = match filter with None -> "" | Some f -> " filter:" ^ f in
-  let v = String.concat "" [event; once; debounce; throttle; filter] in
-  At.v "data-event" v
+  String.concat "" [event; once; debounce; throttle; filter]
+
+let event ?once ?debounce_ms ?throttle_ms ?filter event =
+  let e = event_data ?once ?debounce_ms ?throttle_ms ?filter event in
+  At.v "data-event" e
+
+let add_event ?once ?debounce_ms ?throttle_ms ?filter event at =
+  let e1 = event_data ?once ?debounce_ms ?throttle_ms ?filter event in
+  let n, e0 = At.to_pair at in
+  At.of_pair (n, String.concat ", " [e0; e1])
 
 type effect_kind =
 [ `Element | `Children | `Beforebegin | `Afterbegin | `Beforeend | `Afterend
