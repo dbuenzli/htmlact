@@ -269,8 +269,8 @@ module Event = struct
   | [] -> o, d, t, f
   | tok :: rest as ts ->
       let tok = Jstr.trim tok in
-      if Jstr.is_empty tok then parse_mods o d t f ts else
-      if Jstr.(equal tok (v "once")) then parse_mods true d t f ts else
+      if Jstr.is_empty tok then parse_mods o d t f rest else
+      if Jstr.(equal tok (v "once")) then parse_mods true d t f rest else
       match Parse.kv ts with
       | None -> o, d, t, f
       | Some (k, v, ts) ->
